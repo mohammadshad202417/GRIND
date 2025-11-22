@@ -1,0 +1,349 @@
+// Grind Extension - Theme Utilities
+console.log('Grind Extension theme utilities loaded');
+
+/**
+ * Theme utility class for managing dark/light mode and pixel-art styling
+ */
+class ThemeManager {
+    constructor() {
+        this.currentTheme = 'dark';
+        this.themeChangeCallbacks = [];
+        this.systemThemeQuery = null;
+        
+        // Initialize theme detection
+        this.initThemeDetection();
+    }
+    
+    /**
+     * Initialize theme detection and auto-sync
+     */
+    initThemeDetection() {
+        // Check for system theme preference
+        if (window.matchMedia) {
+            this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            this.systemThemeQuery.addListener(this.handleSystemThemeChange.bind(this));
+            
+            // Set initial theme based on system preference
+            this.currentTheme = this.systemThemeQuery.matches ? 'dark' : 'light';
+        }
+        
+        // Load saved theme preference
+        this.loadThemePreference();
+    }
+    
+    /**
+     * Load theme preference from storage
+     */
+    async loadThemePreference() {
+        try {
+            const result = await chrome.storage.sync.get(['theme']);
+            if (result.theme) {
+                this.currentTheme = result.theme;
+            }
+        } catch (error) {
+            console.error('Error loading theme preference:', error);
+        }
+    }
+    
+    /**
+     * Handle system theme change
+     * @param {MediaQueryListEvent} event - Media query change event
+     */
+    handleSystemThemeChange(event) {
+        const systemTheme = event.matches ? 'dark' : 'light';
+        
+        // Auto-sync with system theme if no manual preference is set
+        chrome.storage.sync.get(['theme', 'autoSyncTheme'], (result) => {
+            if (result.autoSyncTheme !== false) { // Default to true
+                this.setTheme(systemTheme, false); // Don't save to storage for auto-sync
+            }
+        });
+    }
+    
+    /**
+     * Set theme and apply to document
+     * @param {string} theme - Theme name ('dark' or 'light')
+     * @param {boolean} save - Whether to save to storage
+     */
+    async setTheme(theme, save = true) {
+        if (theme !== 'dark' && theme !== 'light') {
+            console.error('Invalid theme:', theme);
+            return;
+        }
+        
+        this.currentTheme = theme;
+        
+        // Apply theme to current document
+        this.applyThemeToDocument();
+        
+        // Save to storage if requested
+        if (save) {
+            try {
+                await chrome.storage.sync.set({ theme: theme });
+            } catch (error) {
+                console.error('Error saving theme:', error);
+            }
+        }
+        
+        // Notify callbacks
+        this.notifyThemeChange(theme);
+        
+        console.log('Theme set to:', theme);
+    }
+    
+    /**
+     * Apply theme to the current document
+     */
+    applyThemeToDocument() {
+        const body = document.body;
+        const html = document.documentElement;
+        
+        if (this.currentTheme === 'light') {
+            body.classList.add('light');
+            html.setAttribute('data-theme', 'light');
+        } else {
+            body.classList.remove('light');
+            html.setAttribute('data-theme', 'dark');
+        }
+        
+        // Update theme toggle button if it exists
+        this.updateThemeToggleButton();
+    }
+    
+    /**
+     * Update theme toggle button appearance
+     */
+    updateThemeToggleButton() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('.theme-icon');
+            if (icon) {
+                icon.textContent = this.currentTheme === 'dark' ? '🌙' : '☀️';
+            }
+        }
+    }
+    
+    /**
+     * Toggle between dark and light theme
+     */
+    async toggleTheme() {
+        const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        await this.setTheme(newTheme);
+    }
+    
+    /**
+     * Get current theme
+     * @returns {string} Current theme name
+     */
+    getCurrentTheme() {
+        return this.currentTheme;
+    }
+    
+    /**
+     * Check if current theme is dark
+     * @returns {boolean} True if dark theme
+     */
+    isDarkTheme() {
+        return this.currentTheme === 'dark';
+    }
+    
+    /**
+     * Check if current theme is light
+     * @returns {boolean} True if light theme
+     */
+    isLightTheme() {
+        return this.currentTheme === 'light';
+    }
+    
+    /**
+     * Add theme change callback
+     * @param {Function} callback - Callback function
+     * @returns {Function} Unsubscribe function
+     */
+    onThemeChange(callback) {
+        this.themeChangeCallbacks.push(callback);
+        
+        // Return unsubscribe function
+        return () => {
+            const index = this.themeChangeCallbacks.indexOf(callback);
+            if (index > -1) {
+                this.themeChangeCallbacks.splice(index, 1);
+            }
+        };
+    }
+    
+    /**
+     * Notify all theme change callbacks
+     * @param {string} theme - New theme name
+     */
+    notifyThemeChange(theme) {
+        this.themeChangeCallbacks.forEach(callback => {
+            try {
+                callback(theme);
+            } catch (error) {
+                console.error('Error in theme change callback:', error);
+            }
+        });
+    }
+    
+    /**
+     * Generate pixel-art CSS variables for the current theme
+     * @returns {Object} CSS variables object
+     */
+    getThemeVariables() {
+        const variables = {
+            dark: {
+                '--bg-primary': '#000000',
+                '--bg-secondary': '#111111',
+                '--bg-tertiary': '#222222',
+                '--text-primary': '#ffffff',
+                '--text-secondary': '#cccccc',
+                '--text-muted': '#666666',
+                '--border-primary': '#ffffff',
+                '--border-secondary': '#333333',
+                '--shadow-primary': '#666666',
+                '--shadow-secondary': '#333333',
+                '--accent-primary': '#00ff00',
+                '--accent-secondary': '#ff6600',
+                '--accent-danger': '#ff0000',
+                '--accent-warning': '#ffff00'
+            },
+            light: {
+                '--bg-primary': '#ffffff',
+                '--bg-secondary': '#f0f0f0',
+                '--bg-tertiary': '#e0e0e0',
+                '--text-primary': '#000000',
+                '--text-secondary': '#333333',
+                '--text-muted': '#666666',
+                '--border-primary': '#000000',
+                '--border-secondary': '#cccccc',
+                '--shadow-primary': '#cccccc',
+                '--shadow-secondary': '#e0e0e0',
+                '--accent-primary': '#00ff00',
+                '--accent-secondary': '#ff6600',
+                '--accent-danger': '#ff0000',
+                '--accent-warning': '#ffff00'
+            }
+        };
+        
+        return variables[this.currentTheme] || variables.dark;
+    }
+    
+    /**
+     * Apply pixel-art CSS variables to document
+     */
+    applyThemeVariables() {
+        const variables = this.getThemeVariables();
+        const root = document.documentElement;
+        
+        Object.entries(variables).forEach(([property, value]) => {
+            root.style.setProperty(property, value);
+        });
+    }
+    
+    /**
+     * Create pixel-art button styles
+     * @param {string} variant - Button variant ('primary', 'secondary', 'danger')
+     * @returns {Object} CSS styles object
+     */
+    getButtonStyles(variant = 'primary') {
+        const baseStyles = {
+            fontFamily: "'Press Start 2P', 'VT323', monospace",
+            border: '2px solid var(--border-primary)',
+            background: 'var(--bg-primary)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            transition: 'all 0.1s ease',
+            boxShadow: '4px 4px 0px var(--shadow-primary)',
+            textTransform: 'uppercase',
+            fontSize: '10px',
+            padding: '8px 12px'
+        };
+        
+        const variants = {
+            primary: {
+                background: 'var(--accent-primary)',
+                color: 'var(--bg-primary)',
+                borderColor: 'var(--accent-primary)'
+            },
+            secondary: {
+                background: 'var(--accent-secondary)',
+                color: 'var(--bg-primary)',
+                borderColor: 'var(--accent-secondary)'
+            },
+            danger: {
+                background: 'var(--accent-danger)',
+                color: 'var(--bg-primary)',
+                borderColor: 'var(--accent-danger)'
+            }
+        };
+        
+        return { ...baseStyles, ...variants[variant] };
+    }
+    
+    /**
+     * Initialize theme for a specific context (popup, options, content)
+     * @param {string} context - Context name ('popup', 'options', 'content')
+     */
+    async initContextTheme(context) {
+        await this.loadThemePreference();
+        this.applyThemeToDocument();
+        this.applyThemeVariables();
+        
+        // Context-specific initialization
+        switch (context) {
+            case 'popup':
+                this.initPopupTheme();
+                break;
+            case 'options':
+                this.initOptionsTheme();
+                break;
+            case 'content':
+                this.initContentTheme();
+                break;
+        }
+    }
+    
+    /**
+     * Initialize popup-specific theme
+     */
+    initPopupTheme() {
+        // Popup-specific theme initialization
+        console.log('Popup theme initialized');
+    }
+    
+    /**
+     * Initialize options-specific theme
+     */
+    initOptionsTheme() {
+        // Options-specific theme initialization
+        console.log('Options theme initialized');
+    }
+    
+    /**
+     * Initialize content script theme
+     */
+    initContentTheme() {
+        // Content script theme initialization
+        console.log('Content theme initialized');
+    }
+}
+
+// Create global instance
+const themeManager = new ThemeManager();
+
+// Listen for storage changes to sync theme across contexts
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync' && changes.theme) {
+        const newTheme = changes.theme.newValue;
+        if (newTheme !== themeManager.getCurrentTheme()) {
+            themeManager.setTheme(newTheme, false); // Don't save to avoid loop
+        }
+    }
+});
+
+// Export for use in other scripts (non-service worker contexts)
+if (typeof window !== 'undefined') {
+    window.ThemeManager = ThemeManager;
+    window.themeManager = themeManager;
+}

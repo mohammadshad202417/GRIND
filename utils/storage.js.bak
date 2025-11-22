@@ -1,0 +1,536 @@
+// Grind Extension - Storage Utilities
+console.log('Grind Extension storage utilities loaded');
+
+/**
+ * Storage utility class for managing Chrome extension storage
+ */
+class StorageManager {
+    constructor() {
+        this.defaultSettings = {
+            theme: 'dark',
+            grindMode: false,
+            notifications: true,
+            autoStart: false,
+            sound: true,
+            sessionDuration: 25,
+            breakDuration: 5,
+            dailyGoal: 4,
+            fontSize: 'medium',
+            widgetPosition: 'top-right',
+            sessionStartTime: null,
+            totalGrindTime: 0,
+            dailyGrindTime: 0,
+            streak: 0,
+            lastGrindDate: null
+        };
+        
+        this.storageKeys = Object.keys(this.defaultSettings);
+    }
+    
+    /**
+     * Get all settings from storage
+     * @returns {Promise<Object>} Settings object
+     */
+    async getAllSettings() {
+        try {
+            const result = await chrome.storage.sync.get(this.storageKeys);
+            return { ...this.defaultSettings, ...result };
+        } catch (error) {
+            console.error('Error getting settings:', error);
+            return { ...this.defaultSettings };
+        }
+    }
+    
+    /**
+     * Get a specific setting from storage
+     * @param {string} key - Setting key
+     * @returns {Promise<any>} Setting value
+     */
+    async getSetting(key) {
+        try {
+            const result = await chrome.storage.sync.get([key]);
+            return result[key] !== undefined ? result[key] : this.defaultSettings[key];
+        } catch (error) {
+            console.error(`Error getting setting ${key}:`, error);
+            return this.defaultSettings[key];
+        }
+    }
+    
+    /**
+     * Set a specific setting in storage
+     * @param {string} key - Setting key
+     * @param {any} value - Setting value
+     * @returns {Promise<void>}
+     */
+    async setSetting(key, value) {
+        try {
+            await chrome.storage.sync.set({ [key]: value });
+            console.log(`Setting ${key} updated to:`, value);
+        } catch (error) {
+            console.error(`Error setting ${key}:`, error);
+        }
+    }
+    
+    /**
+     * Set multiple settings in storage
+     * @param {Object} settings - Settings object
+     * @returns {Promise<void>}
+     */
+    async setSettings(settings) {
+        try {
+            await chrome.storage.sync.set(settings);
+            console.log('Settings updated:', settings);
+        } catch (error) {
+            console.error('Error setting multiple settings:', error);
+        }
+    }
+    
+    /**
+     * Clear all settings and reset to defaults
+     * @returns {Promise<void>}
+     */
+    async resetSettings() {
+        try {
+            await chrome.storage.sync.clear();
+            console.log('Settings reset to defaults');
+        } catch (error) {
+            console.error('Error resetting settings:', error);
+        }
+    }
+    
+    /**
+     * Export all data as JSON
+     * @returns {Promise<string>} JSON string of all data
+     */
+    async exportData() {
+        try {
+            const data = await chrome.storage.sync.get();
+            return JSON.stringify(data, null, 2);
+        } catch (error) {
+            console.error('Error exporting data:', error);
+            return '{}';
+        }
+    }
+    
+    /**
+     * Import data from JSON string
+     * @param {string} jsonData - JSON string of data
+     * @returns {Promise<void>}
+     */
+    async importData(jsonData) {
+        try {
+            const data = JSON.parse(jsonData);
+            await chrome.storage.sync.set(data);
+            console.log('Data imported successfully');
+        } catch (error) {
+            console.error('Error importing data:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get grind statistics
+     * @returns {Promise<Object>} Statistics object
+     */
+    async getStats() {
+        try {
+            const stats = await chrome.storage.local.get([
+                'totalGrindTime',
+                'dailyGrindTime',
+                'streak',
+                'lastGrindDate',
+                'sessionCount',
+                'averageSessionTime'
+            ]);
+            
+            return {
+                totalGrindTime: stats.totalGrindTime || 0,
+                dailyGrindTime: stats.dailyGrindTime || 0,
+                streak: stats.streak || 0,
+                lastGrindDate: stats.lastGrindDate || null,
+                sessionCount: stats.sessionCount || 0,
+                averageSessionTime: stats.averageSessionTime || 0
+            };
+        } catch (error) {
+            console.error('Error getting stats:', error);
+            return {
+                totalGrindTime: 0,
+                dailyGrindTime: 0,
+                streak: 0,
+                lastGrindDate: null,
+                sessionCount: 0,
+                averageSessionTime: 0
+            };
+        }
+    }
+    
+    /**
+     * Update grind statistics
+     * @param {Object} statsUpdate - Statistics to update
+     * @returns {Promise<void>}
+     */
+    async updateStats(statsUpdate) {
+        try {
+            await chrome.storage.local.set(statsUpdate);
+            console.log('Stats updated:', statsUpdate);
+        } catch (error) {
+            console.error('Error updating stats:', error);
+        }
+    }
+    
+    /**
+     * Add grind session time
+     * @param {number} sessionTime - Session time in milliseconds
+     * @returns {Promise<void>}
+     */
+    async addGrindSession(sessionTime) {
+        try {
+            const stats = await this.getStats();
+            const today = new Date().toDateString();
+            
+            // Update total time
+            const newTotalTime = stats.totalGrindTime + sessionTime;
+            
+            // Update daily time (reset if new day)
+            const newDailyTime = stats.lastGrindDate === today 
+                ? stats.dailyGrindTime + sessionTime 
+                : sessionTime;
+            
+            // Update streak
+            let newStreak = stats.streak;
+            if (stats.lastGrindDate !== today) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (stats.lastGrindDate === yesterday.toDateString()) {
+                    newStreak += 1;
+                } else {
+                    newStreak = 1; // Reset streak if not consecutive
+                }
+            }
+            
+            // Update session count
+            const newSessionCount = stats.sessionCount + 1;
+            
+            // Calculate average session time
+            const newAverageTime = newTotalTime / newSessionCount;
+            
+            await this.updateStats({
+                totalGrindTime: newTotalTime,
+                dailyGrindTime: newDailyTime,
+                streak: newStreak,
+                lastGrindDate: today,
+                sessionCount: newSessionCount,
+                averageSessionTime: newAverageTime
+            });
+            
+            console.log('Grind session added:', {
+                sessionTime,
+                newTotalTime,
+                newDailyTime,
+                newStreak
+            });
+        } catch (error) {
+            console.error('Error adding grind session:', error);
+        }
+    }
+    
+    /**
+     * Update website time tracking
+     * @param {string} domain - Website domain
+     * @param {number} timeSpent - Time spent in milliseconds
+     * @returns {Promise<void>}
+     */
+    async updateWebsiteTime(domain, timeSpent) {
+        if (!domain) return;
+        
+        try {
+            const result = await chrome.storage.local.get(['websiteStats']);
+            const websiteStats = result.websiteStats || {};
+            
+            if (!websiteStats[domain]) {
+                websiteStats[domain] = {
+                    timeSpent: 0,
+                    visits: 0,
+                    category: 'unknown',
+                    lastVisit: Date.now(),
+                    firstVisit: Date.now()
+                };
+            }
+            
+            // Update time spent
+            websiteStats[domain].timeSpent += timeSpent;
+            websiteStats[domain].lastVisit = Date.now();
+            
+            await chrome.storage.local.set({ websiteStats: websiteStats });
+            
+            console.log(`Updated website time for ${domain}: +${Math.round(timeSpent/1000)}s`);
+        } catch (error) {
+            console.error('Error updating website time:', error);
+        }
+    }
+    
+    /**
+     * Increment website visit count
+     * @param {string} domain - Website domain
+     * @returns {Promise<void>}
+     */
+    async incrementWebsiteVisits(domain) {
+        if (!domain) return;
+        
+        try {
+            const result = await chrome.storage.local.get(['websiteStats']);
+            const websiteStats = result.websiteStats || {};
+            
+            if (!websiteStats[domain]) {
+                websiteStats[domain] = {
+                    timeSpent: 0,
+                    visits: 0,
+                    category: 'unknown',
+                    lastVisit: Date.now(),
+                    firstVisit: Date.now()
+                };
+            }
+            
+            websiteStats[domain].visits += 1;
+            websiteStats[domain].lastVisit = Date.now();
+            
+            await chrome.storage.local.set({ websiteStats: websiteStats });
+            
+            console.log(`Incremented visits for ${domain}: ${websiteStats[domain].visits}`);
+        } catch (error) {
+            console.error('Error incrementing website visits:', error);
+        }
+    }
+    
+    /**
+     * Get website statistics
+     * @returns {Promise<Object>} Website stats object
+     */
+    async getWebsiteStats() {
+        try {
+            const result = await chrome.storage.local.get(['websiteStats']);
+            return result.websiteStats || {};
+        } catch (error) {
+            console.error('Error getting website stats:', error);
+            return {};
+        }
+    }
+    
+    /**
+     * Update session data
+     * @param {string} domain - Current domain
+     * @param {number} timeSpent - Time spent in milliseconds
+     * @param {boolean} domainChanged - Whether domain changed
+     * @returns {Promise<void>}
+     */
+    async updateSessionData(domain, timeSpent, domainChanged = false) {
+        try {
+            const result = await chrome.storage.local.get(['sessionData']);
+            const sessionData = result.sessionData || {
+                startTime: Date.now(),
+                totalTime: 0,
+                currentDomain: null,
+                domainHistory: []
+            };
+            
+            // Update total session time
+            sessionData.totalTime += timeSpent;
+            
+            // Handle domain change
+            if (domainChanged) {
+                if (sessionData.currentDomain && sessionData.currentDomain !== domain) {
+                    // Add previous domain to history
+                    sessionData.domainHistory.push({
+                        domain: sessionData.currentDomain,
+                        startTime: sessionData.lastDomainStartTime || Date.now(),
+                        endTime: Date.now()
+                    });
+                }
+                
+                sessionData.currentDomain = domain;
+                sessionData.lastDomainStartTime = Date.now();
+                
+                // Increment visit count for new domain
+                if (domain) {
+                    await this.incrementWebsiteVisits(domain);
+                }
+            }
+            
+            await chrome.storage.local.set({ sessionData: sessionData });
+        } catch (error) {
+            console.error('Error updating session data:', error);
+        }
+    }
+    
+    /**
+     * Get session data
+     * @returns {Promise<Object>} Session data object
+     */
+    async getSessionData() {
+        try {
+            const result = await chrome.storage.local.get(['sessionData']);
+            return result.sessionData || {
+                startTime: Date.now(),
+                totalTime: 0,
+                currentDomain: null,
+                domainHistory: []
+            };
+        } catch (error) {
+            console.error('Error getting session data:', error);
+            return {
+                startTime: Date.now(),
+                totalTime: 0,
+                currentDomain: null,
+                domainHistory: []
+            };
+        }
+    }
+    
+    /**
+     * Reset session data
+     * @returns {Promise<void>}
+     */
+    async resetSessionData() {
+        try {
+            await chrome.storage.local.set({
+                sessionData: {
+                    startTime: Date.now(),
+                    totalTime: 0,
+                    currentDomain: null,
+                    domainHistory: []
+                }
+            });
+            console.log('Session data reset');
+        } catch (error) {
+            console.error('Error resetting session data:', error);
+        }
+    }
+    
+    /**
+     * Get top websites by time spent
+     * @param {number} limit - Number of top websites to return
+     * @returns {Promise<Array>} Array of top websites
+     */
+    async getTopWebsites(limit = 10) {
+        try {
+            const websiteStats = await this.getWebsiteStats();
+            const websites = Object.entries(websiteStats)
+                .map(([domain, stats]) => ({
+                    domain,
+                    ...stats
+                }))
+                .sort((a, b) => b.timeSpent - a.timeSpent)
+                .slice(0, limit);
+            
+            return websites;
+        } catch (error) {
+            console.error('Error getting top websites:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Get daily website usage
+     * @param {string} date - Date string (YYYY-MM-DD)
+     * @returns {Promise<Object>} Daily usage data
+     */
+    async getDailyUsage(date = null) {
+        try {
+            const targetDate = date || new Date().toDateString();
+            const websiteStats = await this.getWebsiteStats();
+            
+            const dailyUsage = {};
+            Object.entries(websiteStats).forEach(([domain, stats]) => {
+                const lastVisitDate = new Date(stats.lastVisit).toDateString();
+                if (lastVisitDate === targetDate) {
+                    dailyUsage[domain] = stats;
+                }
+            });
+            
+            return dailyUsage;
+        } catch (error) {
+            console.error('Error getting daily usage:', error);
+            return {};
+        }
+    }
+    
+    /**
+     * Set website category
+     * @param {string} domain - Website domain
+     * @param {string} category - Category name
+     * @returns {Promise<void>}
+     */
+    async setWebsiteCategory(domain, category) {
+        try {
+            const result = await chrome.storage.local.get(['websiteStats']);
+            const websiteStats = result.websiteStats || {};
+            
+            if (websiteStats[domain]) {
+                websiteStats[domain].category = category;
+                await chrome.storage.local.set({ websiteStats: websiteStats });
+                console.log(`Set category for ${domain}: ${category}`);
+            }
+        } catch (error) {
+            console.error('Error setting website category:', error);
+        }
+    }
+    
+    /**
+     * Get websites by category
+     * @param {string} category - Category name
+     * @returns {Promise<Array>} Array of websites in category
+     */
+    async getWebsitesByCategory(category) {
+        try {
+            const websiteStats = await this.getWebsiteStats();
+            return Object.entries(websiteStats)
+                .filter(([domain, stats]) => stats.category === category)
+                .map(([domain, stats]) => ({ domain, ...stats }));
+        } catch (error) {
+            console.error('Error getting websites by category:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Clear all website data
+     * @returns {Promise<void>}
+     */
+    async clearWebsiteData() {
+        try {
+            await chrome.storage.local.remove(['websiteStats', 'sessionData']);
+            console.log('Website data cleared');
+        } catch (error) {
+            console.error('Error clearing website data:', error);
+        }
+    }
+    
+    /**
+     * Listen for storage changes
+     * @param {Function} callback - Callback function for changes
+     * @returns {Function} Unsubscribe function
+     */
+    onStorageChange(callback) {
+        const listener = (changes, namespace) => {
+            if (namespace === 'sync' || namespace === 'local') {
+                callback(changes, namespace);
+            }
+        };
+        
+        chrome.storage.onChanged.addListener(listener);
+        
+        // Return unsubscribe function
+        return () => {
+            chrome.storage.onChanged.removeListener(listener);
+        };
+    }
+}
+
+// Create global instance
+const storageManager = new StorageManager();
+
+// Export for use in other scripts (non-service worker contexts)
+if (typeof window !== 'undefined') {
+    window.StorageManager = StorageManager;
+    window.storageManager = storageManager;
+}
