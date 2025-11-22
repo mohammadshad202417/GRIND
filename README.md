@@ -9,7 +9,7 @@
 <p align="center">
   <img 
     src="https://github.com/user-attachments/assets/d7f56128-c2d8-4910-94d1-1925b9b0ffa1"
-    width="350"
+      width="350"
     style="border-radius:10px;"
   />
 </p>
@@ -44,7 +44,8 @@
 - **XP Rewards**: Earn experience points for completing focus sessions.
 - **Streak System**: Maintain daily streaks to unlock achievements.
 
-### 🛡️ Site Blocker <img width="1087" height="716" alt="image" src="https://github.com/user-attachments/assets/6e18a8a9-a30b-4877-ad60-8e849d39da00" />
+### 🛡️ Site Blocker 
+<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/6e18a8a9-a30b-4877-ad60-8e849d39da00" />
 
 - **Distraction Blocking**: Block time-wasting sites during focus sessions.
 - **Custom Lists**: Manage your own blocklists and whitelist productive sites.
@@ -72,7 +73,7 @@
 ## 📸 Screenshots
 
 <p align="center">
-<img width="498" height="744" alt="Screenshot 2025-11-22 190921" src="https://github.com/user-attachments/assets/3921eaab-9a70-4af4-89ba-df3af18cfc93" />
+<img width="502" height="747" alt="image" src="https://github.com/user-attachments/assets/d739f7d9-a7e6-4cec-8829-cb086405b535" />
 <img width="500" height="753" alt="Screenshot 2025-11-22 191028" src="https://github.com/user-attachments/assets/70596d79-217d-4380-ad52-a9722e9a61cc" />
 <img width="1358" height="970" alt="Screenshot 2025-11-22 190818" src="https://github.com/user-attachments/assets/287241f6-dd2e-4c19-bed1-c0875c991e40" />
 
@@ -98,7 +99,7 @@
 2. Go to **chrome://extensions**  
 3. Enable **Developer Mode**  
 4. Click **Load Unpacked**  
-5. Select the `grind-extension` folder.
+5. Select the `GRIND` folder.
 
 ---
 
