@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grind Extension - Options</title>
+    <link rel="stylesheet" href="options.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="options-container">
+        <!-- Header -->
+        <header class="options-header">
+            <div class="header-left">
+                <h1 class="options-title">GRIND EXTENSION</h1>
+                <div class="auto-save-indicator" id="autoSaveIndicator">
+                    <span class="indicator-icon">💾</span>
+                    <span class="indicator-text">Auto-save ON</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="themeToggle" class="theme-btn" title="Toggle Theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="options-main">
+            <!-- General Settings -->
+            <section class="settings-section">
+                <h2 class="section-title">General Settings</h2>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="trackTimeEnabled" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Track time spent on websites
+                    </label>
+                    <p class="setting-description">Monitor and record time spent on different websites</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="notificationsEnabled" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Show notifications
+                    </label>
+                    <p class="setting-description">Display browser notifications for milestones and alerts</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="darkModeEnabled" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Dark mode
+                    </label>
+                    <p class="setting-description">Use dark theme for the extension interface</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label" for="textSize">
+                        Text Size
+                    </label>
+                    <select id="textSize" class="setting-select">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                        <option value="extra-large">Extra Large</option>
+                    </select>
+                    <p class="setting-description">Size of text throughout the extension</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="autoSaveEnabled" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Auto Save
+                    </label>
+                    <p class="setting-description">Automatically save changes when settings are modified</p>
+                </div>
+            </section>
+
+            <!-- Privacy Settings -->
+            <section class="settings-section">
+                <h2 class="section-title">Privacy Settings</h2>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="excludeIncognito" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Exclude private/incognito tabs
+                    </label>
+                    <p class="setting-description">Don't track time spent in incognito/private browsing windows</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="excludeSystemPages" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Exclude system pages (chrome://)
+                    </label>
+                    <p class="setting-description">Don't track time spent on browser system pages</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="anonymizeData" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Anonymize data (store only domain)
+                    </label>
+                    <p class="setting-description">Store only domain names, not full URLs or page titles</p>
+                </div>
+            </section>
+
+            <!-- Site Blocking & Focus -->
+            <section class="settings-section">
+                <h2 class="section-title">Site Blocking & Focus</h2>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="blockingEnabled" class="setting-checkbox">
+                        <span class="checkmark"></span>
+                        Enable site blocking
+                    </label>
+                    <p class="setting-description">Block distracting websites to maintain focus</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label" for="blockingLevel">
+                        Blocking Level
+                    </label>
+                    <select id="blockingLevel" class="setting-select">
+                        <option value="block-all">Block All Websites</option>
+                        <option value="custom" selected>Custom</option>
+                    </select>
+                    <p class="setting-description">How strictly to enforce website blocking</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label" for="focusSessionDuration">
+                        Focus Session Duration (minutes)
+                    </label>
+                    <input type="number" id="focusSessionDuration" class="setting-input" min="5" max="120" value="25">
+                    <p class="setting-description">Default duration for focus sessions</p>
+                </div>
+                
+                <!-- Blocked Sites -->
+                <div class="setting-group">
+                    <div class="sites-management">
+                        <h3 class="subsection-title">Blocked Sites</h3>
+                        <div class="sites-list" id="blockedSitesList">
+                            <!-- Blocked sites will be populated here -->
+                        </div>
+                        <div class="sites-controls">
+                            <div class="add-site-controls">
+                                <input type="text" id="newBlockedSiteInput" class="site-input" placeholder="Enter domain (e.g., facebook.com)">
+                                <button id="addBlockedSiteBtn" class="action-button">Add Site</button>
+                            </div>
+                            <div class="sites-actions">
+                                <button id="importBlockedSitesBtn" class="action-button">Import</button>
+                                <button id="exportBlockedSitesBtn" class="action-button">Export</button>
+                                <button id="clearBlockedSitesBtn" class="action-button danger">Clear</button>
+                            </div>
+                        </div>
+                        <div class="site-presets">
+                            <button class="preset-btn" data-sites="facebook.com,twitter.com,instagram.com">Social Media</button>
+                            <button class="preset-btn" data-sites="youtube.com,netflix.com,twitch.tv">Entertainment</button>
+                            <button class="preset-btn" data-sites="reddit.com,9gag.com,buzzfeed.com">Distractions</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Productive Sites -->
+                <div class="setting-group">
+                    <div class="sites-management">
+                        <h3 class="subsection-title">Productive Sites</h3>
+                        <div class="sites-list" id="productiveSitesList">
+                            <!-- Productive sites will be populated here -->
+                        </div>
+                        <div class="sites-controls">
+                            <div class="add-site-controls">
+                                <input type="text" id="newProductiveSiteInput" class="site-input" placeholder="Enter domain (e.g., github.com)">
+                                <button id="addProductiveSiteBtn" class="action-button">Add Site</button>
+                            </div>
+                            <div class="sites-actions">
+                                <button id="importProductiveSitesBtn" class="action-button">Import</button>
+                                <button id="exportProductiveSitesBtn" class="action-button">Export</button>
+                                <button id="clearProductiveSitesBtn" class="action-button danger">Clear</button>
+                            </div>
+                        </div>
+                        <div class="site-presets">
+                            <button class="preset-btn productive" data-sites="github.com,stackoverflow.com,developer.mozilla.org">Development</button>
+                            <button class="preset-btn productive" data-sites="coursera.org,udemy.com,khanacademy.org">Learning</button>
+                            <button class="preset-btn productive" data-sites="notion.so,trello.com,asana.com">Productivity</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Management -->
+            <section class="settings-section">
+                <h2 class="section-title">Data Management</h2>
+                
+                <div class="setting-group">
+                    <label class="setting-label" for="dataRetentionPeriod">
+                        Data Retention Period
+                    </label>
+                    <select id="dataRetentionPeriod" class="setting-select">
+                        <option value="7">7 days</option>
+                        <option value="30" selected>30 days</option>
+                        <option value="90">90 days</option>
+                    </select>
+                    <p class="setting-description">How long to keep tracking data before automatic cleanup</p>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label" for="exportFormat">
+                        Export Format
+                    </label>
+                    <select id="exportFormat" class="setting-select">
+                        <option value="json" selected>JSON</option>
+                    </select>
+                    <p class="setting-description">Format for data export files</p>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="data-actions">
+                        <button id="exportAllDataBtn" class="action-button primary">
+                            Export Data
+                        </button>
+                        <button id="importAllDataBtn" class="action-button">
+                            Import Data
+                        </button>
+                        <input type="file" id="importAllDataFile" accept=".json" style="display: none;">
+                        <button id="clearAllDataBtn" class="action-button danger">
+                            Clear All Data
+                        </button>
+                        <button id="resetAllSettingsBtn" class="action-button danger">
+                            Reset Settings
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics -->
+            <section class="settings-section">
+                <h2 class="section-title">Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📑</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="tabsTracked">0</div>
+                            <div class="stat-label">Tabs Opened</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="tabSwitchesTracked">0</div>
+                            <div class="stat-label">Tab Switches</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="timeTracked">0h</div>
+                            <div class="stat-label">Time Tracked</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">🌐</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="uniqueDomains">0</div>
+                            <div class="stat-label">Unique Domains</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="dataSize">0 KB</div>
+                            <div class="stat-label">Data Size</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="options-footer">
+            <div class="footer-left">
+                <div class="footer-version">Grind Extension v1.0.0</div>
+            </div>
+            <div class="footer-right">
+                <div class="save-controls" id="saveControls" style="display: none;">
+                    <button id="saveSettingsBtn" class="save-btn">Save Changes</button>
+                    <button id="cancelChangesBtn" class="cancel-btn">Cancel</button>
+                </div>
+                <div class="unsaved-indicator" id="unsavedIndicator" style="display: none;">
+                    <span class="indicator-icon">⚠️</span>
+                    <span class="indicator-text">Unsaved changes</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="options.js?v=1.0.2"></script>
+</body>
+</html>
