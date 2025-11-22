@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grind Extension Dashboard</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- Chart.js removed due to CSP restrictions -->
+</head>
+<body>
+    <div class="popup-container">
+        <!-- Header -->
+        <header class="popup-header">
+            <div class="header-left">
+                <h1 class="popup-title">GRIND</h1>
+                <div class="level-badge" id="levelBadge">LVL 1</div>
+            </div>
+            <div class="header-right">
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xpFill"></div>
+                    <span class="xp-text" id="xpText">0/100 XP</span>
+                </div>
+                <button id="themeToggle" class="theme-btn" title="Toggle Theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard -->
+        <main class="popup-main">
+            <!-- Current Tab Info -->
+            <section class="dashboard-section current-tab-section">
+                <h2 class="section-title">Current Tab</h2>
+                <div class="tab-info">
+                    <div class="tab-domain" id="currentDomain">Loading...</div>
+                    <div class="tab-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Time:</span>
+                            <span class="stat-value" id="currentTime">0m</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Visits:</span>
+                            <span class="stat-value" id="currentVisits">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Galaxy Builder -->
+            <section class="dashboard-section galaxy-section">
+                <h2 class="section-title">Galaxy Builder</h2>
+                <div class="galaxy-container">
+                    <canvas id="galaxyCanvas" width="400" height="280"></canvas>
+                    <div class="galaxy-stats">
+                        <div class="star-count" id="starCount">0 Stars</div>
+                        <div class="galaxy-age" id="galaxyAge">New Galaxy</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Galaxy Controls -->
+            <section class="dashboard-section galaxy-controls-section">
+                <h2 class="section-title">Galaxy Controls</h2>
+                <div class="galaxy-controls">
+                    <button id="zoomInBtn" class="galaxy-btn">🔍+</button>
+                    <button id="zoomOutBtn" class="galaxy-btn">🔍-</button>
+                    <button id="resetViewBtn" class="galaxy-btn">🎯</button>
+                </div>
+                <div class="constellation-info">
+                    <div class="constellation-name" id="constellationName">Orion</div>
+                    <div class="constellation-progress" id="constellationProgress">0/7</div>
+                </div>
+            <div class="star-legend">
+                <div class="legend-item">
+                    <span class="planet-icon ice-icon">❄️</span>
+                    <span class="legend-label">Ice Giant (45+ min)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="planet-icon gas-icon">🪐</span>
+                    <span class="legend-label">Gas Giant (35-44 min)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="planet-icon earth-icon">🌍</span>
+                    <span class="legend-label">Earth-like (25-34 min)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="planet-icon rocky-icon">🪨</span>
+                    <span class="legend-label">Rocky (15-24 min)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="planet-icon asteroid-icon">☄️</span>
+                    <span class="legend-label">Asteroid (<15 min)</span>
+                </div>
+            </div>
+            </section>
+
+            <!-- Session Stats -->
+            <section class="dashboard-section session-section">
+                <h2 class="section-title">Session Stats</h2>
+                <div class="session-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📑</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="tabsOpened">0</div>
+                            <div class="stat-label">Tabs</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="tabSwitches">0</div>
+                            <div class="stat-label">Switches</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalSessionTime">0m</div>
+                            <div class="stat-label">Total Time</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Focus Session Timer -->
+            <section class="dashboard-section timer-section">
+                <h2 class="section-title">Focus Session</h2>
+                <div class="timer-display">
+                    <div class="timer-time" id="focusTimer">00:00</div>
+                    <div class="timer-mode" id="timerMode">FOCUS</div>
+                </div>
+                <div class="timer-controls">
+                    <button id="startTimer" class="timer-btn start-btn">START</button>
+                    <button id="pauseTimer" class="timer-btn pause-btn" disabled>PAUSE</button>
+                    <button id="resetTimer" class="timer-btn reset-btn">RESET</button>
+                </div>
+            </section>
+
+            <!-- Recently Visited Sites -->
+            <section class="dashboard-section recent-sites-section">
+                <h2 class="section-title">Recent Sites</h2>
+                <div class="recent-sites-list" id="recentSitesList">
+                    <!-- Sites will be populated here -->
+                </div>
+            </section>
+
+            <!-- Site Blocker Summary -->
+            <section class="dashboard-section blocker-section">
+                <h2 class="section-title">Site Blocker</h2>
+                <div class="blocker-summary">
+                    <div class="blocked-count" id="blockedCount">0 sites blocked</div>
+                    <button id="addSiteBtn" class="add-site-btn">Add Site to Block</button>
+                </div>
+            </section>
+
+            <!-- Daily Challenge -->
+            <section class="dashboard-section challenge-section">
+                <h2 class="section-title">Daily Challenge</h2>
+                <div class="challenge-display">
+                    <div class="challenge-text" id="challengeText">Block 5 distracting sites today</div>
+                    <div class="challenge-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="challengeProgress"></div>
+                        </div>
+                        <div class="progress-text" id="challengeProgressText">0/5</div>
+                    </div>
+                    <div class="challenge-reward" id="challengeReward">Reward: +50 XP</div>
+                </div>
+            </section>
+
+            <!-- Achievements -->
+            <section class="dashboard-section achievements-section">
+                <h2 class="section-title">Achievements</h2>
+                <div class="achievements-display">
+                    <div class="achievement-item">
+                        <div class="achievement-icon">🔥</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">Streak</div>
+                            <div class="achievement-value" id="streakValue">0 days</div>
+                        </div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon">⭐</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">Level</div>
+                            <div class="achievement-value" id="levelValue">1</div>
+                        </div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon">💎</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">XP</div>
+                            <div class="achievement-value" id="xpValue">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="popup-footer">
+            <div class="footer-message">Focus is your superpower ⚡</div>
+            <div class="footer-actions">
+                <button id="optionsBtn" class="footer-btn" title="Options">
+                    <span class="footer-icon">⚙️</span>
+                </button>
+                <button id="helpBtn" class="footer-btn" title="Help">
+                    <span class="footer-icon">❓</span>
+                </button>
+            </div>
+            <div class="footer-version">Grind Extension v1.0.0</div>
+        </footer>
+    </div>
+
+    <script src="popup.js?v=1.0.2"></script>
+</body>
+</html>
