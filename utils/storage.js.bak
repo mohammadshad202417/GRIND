@@ -1,9 +1,5 @@
-// Grind Extension - Storage Utilities
 console.log('Grind Extension storage utilities loaded');
 
-/**
- * Storage utility class for managing Chrome extension storage
- */
 class StorageManager {
     constructor() {
         this.defaultSettings = {
@@ -27,10 +23,6 @@ class StorageManager {
         this.storageKeys = Object.keys(this.defaultSettings);
     }
     
-    /**
-     * Get all settings from storage
-     * @returns {Promise<Object>} Settings object
-     */
     async getAllSettings() {
         try {
             const result = await chrome.storage.sync.get(this.storageKeys);
@@ -41,11 +33,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get a specific setting from storage
-     * @param {string} key - Setting key
-     * @returns {Promise<any>} Setting value
-     */
     async getSetting(key) {
         try {
             const result = await chrome.storage.sync.get([key]);
@@ -56,12 +43,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Set a specific setting in storage
-     * @param {string} key - Setting key
-     * @param {any} value - Setting value
-     * @returns {Promise<void>}
-     */
     async setSetting(key, value) {
         try {
             await chrome.storage.sync.set({ [key]: value });
@@ -71,11 +52,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Set multiple settings in storage
-     * @param {Object} settings - Settings object
-     * @returns {Promise<void>}
-     */
     async setSettings(settings) {
         try {
             await chrome.storage.sync.set(settings);
@@ -85,10 +61,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Clear all settings and reset to defaults
-     * @returns {Promise<void>}
-     */
     async resetSettings() {
         try {
             await chrome.storage.sync.clear();
@@ -98,10 +70,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Export all data as JSON
-     * @returns {Promise<string>} JSON string of all data
-     */
     async exportData() {
         try {
             const data = await chrome.storage.sync.get();
@@ -112,11 +80,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Import data from JSON string
-     * @param {string} jsonData - JSON string of data
-     * @returns {Promise<void>}
-     */
     async importData(jsonData) {
         try {
             const data = JSON.parse(jsonData);
@@ -128,10 +91,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get grind statistics
-     * @returns {Promise<Object>} Statistics object
-     */
     async getStats() {
         try {
             const stats = await chrome.storage.local.get([
@@ -164,11 +123,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Update grind statistics
-     * @param {Object} statsUpdate - Statistics to update
-     * @returns {Promise<void>}
-     */
     async updateStats(statsUpdate) {
         try {
             await chrome.storage.local.set(statsUpdate);
@@ -178,25 +132,17 @@ class StorageManager {
         }
     }
     
-    /**
-     * Add grind session time
-     * @param {number} sessionTime - Session time in milliseconds
-     * @returns {Promise<void>}
-     */
     async addGrindSession(sessionTime) {
         try {
             const stats = await this.getStats();
             const today = new Date().toDateString();
             
-            // Update total time
             const newTotalTime = stats.totalGrindTime + sessionTime;
             
-            // Update daily time (reset if new day)
             const newDailyTime = stats.lastGrindDate === today 
                 ? stats.dailyGrindTime + sessionTime 
                 : sessionTime;
             
-            // Update streak
             let newStreak = stats.streak;
             if (stats.lastGrindDate !== today) {
                 const yesterday = new Date();
@@ -204,14 +150,12 @@ class StorageManager {
                 if (stats.lastGrindDate === yesterday.toDateString()) {
                     newStreak += 1;
                 } else {
-                    newStreak = 1; // Reset streak if not consecutive
+                    newStreak = 1;
                 }
             }
             
-            // Update session count
             const newSessionCount = stats.sessionCount + 1;
             
-            // Calculate average session time
             const newAverageTime = newTotalTime / newSessionCount;
             
             await this.updateStats({
@@ -234,12 +178,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Update website time tracking
-     * @param {string} domain - Website domain
-     * @param {number} timeSpent - Time spent in milliseconds
-     * @returns {Promise<void>}
-     */
     async updateWebsiteTime(domain, timeSpent) {
         if (!domain) return;
         
@@ -257,7 +195,6 @@ class StorageManager {
                 };
             }
             
-            // Update time spent
             websiteStats[domain].timeSpent += timeSpent;
             websiteStats[domain].lastVisit = Date.now();
             
@@ -269,11 +206,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Increment website visit count
-     * @param {string} domain - Website domain
-     * @returns {Promise<void>}
-     */
     async incrementWebsiteVisits(domain) {
         if (!domain) return;
         
@@ -302,10 +234,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get website statistics
-     * @returns {Promise<Object>} Website stats object
-     */
     async getWebsiteStats() {
         try {
             const result = await chrome.storage.local.get(['websiteStats']);
@@ -316,13 +244,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Update session data
-     * @param {string} domain - Current domain
-     * @param {number} timeSpent - Time spent in milliseconds
-     * @param {boolean} domainChanged - Whether domain changed
-     * @returns {Promise<void>}
-     */
     async updateSessionData(domain, timeSpent, domainChanged = false) {
         try {
             const result = await chrome.storage.local.get(['sessionData']);
@@ -333,13 +254,10 @@ class StorageManager {
                 domainHistory: []
             };
             
-            // Update total session time
             sessionData.totalTime += timeSpent;
             
-            // Handle domain change
             if (domainChanged) {
                 if (sessionData.currentDomain && sessionData.currentDomain !== domain) {
-                    // Add previous domain to history
                     sessionData.domainHistory.push({
                         domain: sessionData.currentDomain,
                         startTime: sessionData.lastDomainStartTime || Date.now(),
@@ -350,7 +268,6 @@ class StorageManager {
                 sessionData.currentDomain = domain;
                 sessionData.lastDomainStartTime = Date.now();
                 
-                // Increment visit count for new domain
                 if (domain) {
                     await this.incrementWebsiteVisits(domain);
                 }
@@ -362,10 +279,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get session data
-     * @returns {Promise<Object>} Session data object
-     */
     async getSessionData() {
         try {
             const result = await chrome.storage.local.get(['sessionData']);
@@ -386,10 +299,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Reset session data
-     * @returns {Promise<void>}
-     */
     async resetSessionData() {
         try {
             await chrome.storage.local.set({
@@ -406,11 +315,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get top websites by time spent
-     * @param {number} limit - Number of top websites to return
-     * @returns {Promise<Array>} Array of top websites
-     */
     async getTopWebsites(limit = 10) {
         try {
             const websiteStats = await this.getWebsiteStats();
@@ -429,11 +333,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get daily website usage
-     * @param {string} date - Date string (YYYY-MM-DD)
-     * @returns {Promise<Object>} Daily usage data
-     */
     async getDailyUsage(date = null) {
         try {
             const targetDate = date || new Date().toDateString();
@@ -454,12 +353,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Set website category
-     * @param {string} domain - Website domain
-     * @param {string} category - Category name
-     * @returns {Promise<void>}
-     */
     async setWebsiteCategory(domain, category) {
         try {
             const result = await chrome.storage.local.get(['websiteStats']);
@@ -475,11 +368,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Get websites by category
-     * @param {string} category - Category name
-     * @returns {Promise<Array>} Array of websites in category
-     */
     async getWebsitesByCategory(category) {
         try {
             const websiteStats = await this.getWebsiteStats();
@@ -492,10 +380,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Clear all website data
-     * @returns {Promise<void>}
-     */
     async clearWebsiteData() {
         try {
             await chrome.storage.local.remove(['websiteStats', 'sessionData']);
@@ -505,11 +389,6 @@ class StorageManager {
         }
     }
     
-    /**
-     * Listen for storage changes
-     * @param {Function} callback - Callback function for changes
-     * @returns {Function} Unsubscribe function
-     */
     onStorageChange(callback) {
         const listener = (changes, namespace) => {
             if (namespace === 'sync' || namespace === 'local') {
@@ -519,17 +398,14 @@ class StorageManager {
         
         chrome.storage.onChanged.addListener(listener);
         
-        // Return unsubscribe function
         return () => {
             chrome.storage.onChanged.removeListener(listener);
         };
     }
 }
 
-// Create global instance
 const storageManager = new StorageManager();
 
-// Export for use in other scripts (non-service worker contexts)
 if (typeof window !== 'undefined') {
     window.StorageManager = StorageManager;
     window.storageManager = storageManager;
