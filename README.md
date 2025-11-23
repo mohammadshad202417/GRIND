@@ -117,8 +117,6 @@ Pull requests are welcome. If you have feature ideas or bugs, open an issue.
 
 **Developer:** MOHAMMAD SHAD
 
-**Email:** mohammadshad202417@gmail.com
-
 **GitHub:** https://github.com/mohammadshad202417
 
 ---
