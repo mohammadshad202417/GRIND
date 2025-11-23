@@ -1,7 +1,5 @@
-// Grind Extension - Content Script
 console.log('Grind Extension content script loaded');
 
-// Inject pixel-art styles
 const style = document.createElement('style');
 style.textContent = `
   .grind-extension-overlay {
@@ -36,53 +34,43 @@ style.textContent = `
 
 document.head.appendChild(style);
 
-// Initialize content script
 function initContentScript() {
   console.log('Initializing Grind Extension content script');
   
-  // Get current theme from storage
   chrome.storage.sync.get(['theme'], (result) => {
     const theme = result.theme || 'dark';
     console.log('Current theme:', theme);
     
-    // Apply theme to any existing widgets
     document.querySelectorAll('.grind-extension-widget').forEach(widget => {
       widget.className = `grind-extension-widget ${theme}`;
     });
   });
   
-  // Check for blocking on page load
   checkForBlocking();
   
-  // Inject time progress bar if site has time limit
   injectTimeProgressBar();
   
-  // Listen for theme changes
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'sync' && changes.theme) {
       const newTheme = changes.theme.newValue;
       console.log('Theme changed to:', newTheme);
       
-      // Update all widgets
       document.querySelectorAll('.grind-extension-widget').forEach(widget => {
         widget.className = `grind-extension-widget ${newTheme}`;
       });
       
-      // Update blocking overlay theme if it exists
       const overlay = document.getElementById('grind-focus-overlay');
       if (overlay) {
         overlay.className = `grind-focus-overlay ${newTheme}`;
       }
     }
     
-    // Listen for blocking settings changes
     if (namespace === 'sync' && (changes.blockingEnabled || changes.blockedSites || changes.blockingLevel)) {
       checkForBlocking();
     }
   });
 }
 
-// Check if current domain should be blocked
 async function checkForBlocking() {
   try {
     const domain = window.location.hostname;
@@ -92,7 +80,6 @@ async function checkForBlocking() {
     
     const blockedSites = settings.blockedSites || [];
     const isBlocked = blockedSites.some(site => {
-      // Support both exact matches and wildcard patterns
       if (site.includes('*')) {
         const pattern = site.replace(/\*/g, '.*');
         return new RegExp(`^${pattern}$`).test(domain);
@@ -114,7 +101,6 @@ async function checkForBlocking() {
   }
 }
 
-// Message handler
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Content script received message:', request);
   
@@ -155,7 +141,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Widget management functions
 function injectWidget(data) {
   const widget = document.createElement('div');
   widget.className = 'grind-extension-widget';
@@ -164,7 +149,6 @@ function injectWidget(data) {
   widget.style.top = (data.top || 20) + 'px';
   widget.style.left = (data.left || 20) + 'px';
   
-  // Apply current theme
   chrome.storage.sync.get(['theme'], (result) => {
     const theme = result.theme || 'dark';
     widget.className = `grind-extension-widget ${theme}`;
@@ -180,23 +164,18 @@ function removeWidget(id) {
   }
 }
 
-// Focus overlay functions
 function showFocusOverlay(domain, blockingLevel) {
-  // Remove existing overlay if any
   hideFocusOverlay();
   
-  // Create focus overlay
   const overlay = document.createElement('div');
   overlay.id = 'grind-focus-overlay';
   overlay.className = 'grind-focus-overlay';
   
-  // Get current theme
   chrome.storage.sync.get(['theme'], (result) => {
     const theme = result.theme || 'dark';
     overlay.className = `grind-focus-overlay ${theme}`;
   });
   
-  // Determine button availability based on blocking level
   const isStrictMode = blockingLevel === 'strict';
   const unblockButton = isStrictMode 
     ? '<button id="grind-work-btn" class="grind-btn work-btn" disabled><span class="btn-text">Strict Mode Active</span></button>'
@@ -228,7 +207,6 @@ function showFocusOverlay(domain, blockingLevel) {
     </div>
   `;
   
-  // Add focus overlay styles
   const focusStyles = document.createElement('style');
   focusStyles.id = 'grind-focus-styles';
   focusStyles.textContent = `
@@ -437,7 +415,6 @@ function showFocusOverlay(domain, blockingLevel) {
   document.head.appendChild(focusStyles);
   document.body.appendChild(overlay);
   
-  // Add event listeners
   const unblockBtn = document.getElementById('grind-unblock-btn');
   const workBtn = document.getElementById('grind-work-btn');
   const focusSessionBtn = document.getElementById('grind-focus-session-btn');
@@ -454,7 +431,6 @@ function showFocusOverlay(domain, blockingLevel) {
     });
   }
   
-  // Update time saved counter
   updateTimeSaved();
   
   console.log(`Focus overlay shown for ${domain} (${blockingLevel} mode)`);
@@ -473,27 +449,23 @@ function hideFocusOverlay() {
   }
 }
 
-// Show blocking overlay (called from background script)
 function showBlockingOverlay(domain, reason, blockingLevel) {
   console.log(`🚫 Showing blocking overlay for ${domain}: ${reason}`);
   console.log(`Blocking level:`, blockingLevel || 'strict');
   showFocusOverlay(domain, blockingLevel || 'strict');
 }
 
-// Hide blocking overlay (called from background script)
 function hideBlockingOverlay() {
   console.log('Hiding blocking overlay');
   hideFocusOverlay();
 }
 
 function unblockSite(domain) {
-  // Check if this site was auto-blocked due to time limit
   chrome.runtime.sendMessage({
     action: 'getDailyUsage',
     domain: domain
   }, (response) => {
     if (response && response.usage && response.usage.limitExceeded) {
-      // This site was auto-blocked due to time limit - handle bypass
       console.log(`Time limit bypass detected for ${domain}`);
       
       chrome.runtime.sendMessage({
@@ -502,19 +474,16 @@ function unblockSite(domain) {
       }, (bypassResponse) => {
         if (bypassResponse && bypassResponse.success) {
           hideBlockingOverlay();
-          // Reload the page
           window.location.reload();
         }
       });
     } else {
-      // Normal unblock (not time limit related)
       chrome.runtime.sendMessage({
         action: 'removeBlockedSite',
         domain: domain
       }, (response) => {
         if (response && response.success) {
           hideBlockingOverlay();
-          // Reload the page
           window.location.reload();
         }
       });
@@ -527,7 +496,6 @@ function startFocusSession() {
     action: 'startFocusSession'
   }, (response) => {
     hideFocusOverlay();
-    // Show focus session widget
     injectWidget({
       id: 'focus-session-widget',
       text: 'FOCUS SESSION ACTIVE',
@@ -535,7 +503,6 @@ function startFocusSession() {
       left: 20
     });
     
-    // Show focus session timer
     showFocusSessionTimer();
   });
 }
@@ -552,7 +519,6 @@ function showFocusSessionTimer() {
     </div>
   `;
   
-  // Add timer styles
   const timerStyles = document.createElement('style');
   timerStyles.textContent = `
     .focus-timer {
@@ -597,8 +563,7 @@ function showFocusSessionTimer() {
   document.head.appendChild(timerStyles);
   document.body.appendChild(timerWidget);
   
-  // Start countdown timer
-  let timeLeft = 25 * 60; // 25 minutes in seconds
+  let timeLeft = 25 * 60;
   const timerDisplay = document.getElementById('focus-timer-display');
   const endBtn = document.getElementById('end-focus-btn');
   
@@ -627,12 +592,11 @@ function showFocusSessionTimer() {
 }
 
 function updateTimeSaved() {
-  // Calculate time saved based on session data
   chrome.runtime.sendMessage({
     action: 'getSessionData'
   }, (response) => {
     if (response && response.totalTime) {
-      const timeSaved = Math.round(response.totalTime / 60000); // Convert to minutes
+      const timeSaved = Math.round(response.totalTime / 60000);
       const timeSavedElement = document.getElementById('time-saved');
       if (timeSavedElement) {
         timeSavedElement.textContent = timeSaved;
@@ -641,9 +605,7 @@ function updateTimeSaved() {
   });
 }
 
-// Time progress bar functions
 function injectTimeProgressBar() {
-  // Check if site has time limit set
   chrome.runtime.sendMessage({
     action: 'getTimeLimit',
     domain: window.location.hostname
@@ -658,15 +620,12 @@ function injectTimeProgressBar() {
 }
 
 function createTimeProgressBar() {
-  // Remove existing progress bar if any
   removeTimeProgressBar();
   
-  // Create progress bar element
   const progressBar = document.createElement('div');
   progressBar.id = 'grind-time-bar';
   progressBar.className = 'grind-time-progress-bar';
   
-  // Add progress bar styles
   const progressStyles = document.createElement('style');
   progressStyles.id = 'grind-time-bar-styles';
   progressStyles.textContent = `
@@ -712,10 +671,8 @@ function updateTimeProgressBar(percentage, timeToday, limit) {
     return;
   }
   
-  // Update width
   progressBar.style.width = `${Math.min(percentage, 100)}%`;
   
-  // Update color based on percentage
   if (percentage >= 100) {
     progressBar.className = 'grind-time-progress-bar exceeded';
   } else if (percentage >= 90) {
@@ -724,7 +681,6 @@ function updateTimeProgressBar(percentage, timeToday, limit) {
     progressBar.className = 'grind-time-progress-bar';
   }
   
-  // Update background gradient based on percentage
   if (percentage < 70) {
     progressBar.style.background = 'linear-gradient(90deg, #00ff00, #00ff00)';
   } else if (percentage < 90) {
@@ -751,7 +707,6 @@ function removeTimeProgressBar() {
   }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initContentScript);
 } else {
