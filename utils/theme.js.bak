@@ -1,39 +1,25 @@
-// Grind Extension - Theme Utilities
 console.log('Grind Extension theme utilities loaded');
 
-/**
- * Theme utility class for managing dark/light mode and pixel-art styling
- */
 class ThemeManager {
     constructor() {
         this.currentTheme = 'dark';
         this.themeChangeCallbacks = [];
         this.systemThemeQuery = null;
         
-        // Initialize theme detection
         this.initThemeDetection();
     }
     
-    /**
-     * Initialize theme detection and auto-sync
-     */
     initThemeDetection() {
-        // Check for system theme preference
         if (window.matchMedia) {
             this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
             this.systemThemeQuery.addListener(this.handleSystemThemeChange.bind(this));
             
-            // Set initial theme based on system preference
             this.currentTheme = this.systemThemeQuery.matches ? 'dark' : 'light';
         }
         
-        // Load saved theme preference
         this.loadThemePreference();
     }
     
-    /**
-     * Load theme preference from storage
-     */
     async loadThemePreference() {
         try {
             const result = await chrome.storage.sync.get(['theme']);
@@ -45,26 +31,16 @@ class ThemeManager {
         }
     }
     
-    /**
-     * Handle system theme change
-     * @param {MediaQueryListEvent} event - Media query change event
-     */
     handleSystemThemeChange(event) {
         const systemTheme = event.matches ? 'dark' : 'light';
         
-        // Auto-sync with system theme if no manual preference is set
         chrome.storage.sync.get(['theme', 'autoSyncTheme'], (result) => {
-            if (result.autoSyncTheme !== false) { // Default to true
-                this.setTheme(systemTheme, false); // Don't save to storage for auto-sync
+            if (result.autoSyncTheme !== false) {
+                this.setTheme(systemTheme, false);
             }
         });
     }
     
-    /**
-     * Set theme and apply to document
-     * @param {string} theme - Theme name ('dark' or 'light')
-     * @param {boolean} save - Whether to save to storage
-     */
     async setTheme(theme, save = true) {
         if (theme !== 'dark' && theme !== 'light') {
             console.error('Invalid theme:', theme);
@@ -73,10 +49,8 @@ class ThemeManager {
         
         this.currentTheme = theme;
         
-        // Apply theme to current document
         this.applyThemeToDocument();
         
-        // Save to storage if requested
         if (save) {
             try {
                 await chrome.storage.sync.set({ theme: theme });
@@ -85,15 +59,11 @@ class ThemeManager {
             }
         }
         
-        // Notify callbacks
         this.notifyThemeChange(theme);
         
         console.log('Theme set to:', theme);
     }
     
-    /**
-     * Apply theme to the current document
-     */
     applyThemeToDocument() {
         const body = document.body;
         const html = document.documentElement;
@@ -106,13 +76,9 @@ class ThemeManager {
             html.setAttribute('data-theme', 'dark');
         }
         
-        // Update theme toggle button if it exists
         this.updateThemeToggleButton();
     }
     
-    /**
-     * Update theme toggle button appearance
-     */
     updateThemeToggleButton() {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
@@ -123,47 +89,26 @@ class ThemeManager {
         }
     }
     
-    /**
-     * Toggle between dark and light theme
-     */
     async toggleTheme() {
         const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
         await this.setTheme(newTheme);
     }
     
-    /**
-     * Get current theme
-     * @returns {string} Current theme name
-     */
     getCurrentTheme() {
         return this.currentTheme;
     }
     
-    /**
-     * Check if current theme is dark
-     * @returns {boolean} True if dark theme
-     */
     isDarkTheme() {
         return this.currentTheme === 'dark';
     }
     
-    /**
-     * Check if current theme is light
-     * @returns {boolean} True if light theme
-     */
     isLightTheme() {
         return this.currentTheme === 'light';
     }
     
-    /**
-     * Add theme change callback
-     * @param {Function} callback - Callback function
-     * @returns {Function} Unsubscribe function
-     */
     onThemeChange(callback) {
         this.themeChangeCallbacks.push(callback);
         
-        // Return unsubscribe function
         return () => {
             const index = this.themeChangeCallbacks.indexOf(callback);
             if (index > -1) {
@@ -172,10 +117,6 @@ class ThemeManager {
         };
     }
     
-    /**
-     * Notify all theme change callbacks
-     * @param {string} theme - New theme name
-     */
     notifyThemeChange(theme) {
         this.themeChangeCallbacks.forEach(callback => {
             try {
@@ -186,10 +127,6 @@ class ThemeManager {
         });
     }
     
-    /**
-     * Generate pixel-art CSS variables for the current theme
-     * @returns {Object} CSS variables object
-     */
     getThemeVariables() {
         const variables = {
             dark: {
@@ -229,9 +166,6 @@ class ThemeManager {
         return variables[this.currentTheme] || variables.dark;
     }
     
-    /**
-     * Apply pixel-art CSS variables to document
-     */
     applyThemeVariables() {
         const variables = this.getThemeVariables();
         const root = document.documentElement;
@@ -241,11 +175,6 @@ class ThemeManager {
         });
     }
     
-    /**
-     * Create pixel-art button styles
-     * @param {string} variant - Button variant ('primary', 'secondary', 'danger')
-     * @returns {Object} CSS styles object
-     */
     getButtonStyles(variant = 'primary') {
         const baseStyles = {
             fontFamily: "'Press Start 2P', 'VT323', monospace",
@@ -281,16 +210,11 @@ class ThemeManager {
         return { ...baseStyles, ...variants[variant] };
     }
     
-    /**
-     * Initialize theme for a specific context (popup, options, content)
-     * @param {string} context - Context name ('popup', 'options', 'content')
-     */
     async initContextTheme(context) {
         await this.loadThemePreference();
         this.applyThemeToDocument();
         this.applyThemeVariables();
         
-        // Context-specific initialization
         switch (context) {
             case 'popup':
                 this.initPopupTheme();
@@ -304,45 +228,30 @@ class ThemeManager {
         }
     }
     
-    /**
-     * Initialize popup-specific theme
-     */
     initPopupTheme() {
-        // Popup-specific theme initialization
         console.log('Popup theme initialized');
     }
     
-    /**
-     * Initialize options-specific theme
-     */
     initOptionsTheme() {
-        // Options-specific theme initialization
         console.log('Options theme initialized');
     }
     
-    /**
-     * Initialize content script theme
-     */
     initContentTheme() {
-        // Content script theme initialization
         console.log('Content theme initialized');
     }
 }
 
-// Create global instance
 const themeManager = new ThemeManager();
 
-// Listen for storage changes to sync theme across contexts
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'sync' && changes.theme) {
         const newTheme = changes.theme.newValue;
         if (newTheme !== themeManager.getCurrentTheme()) {
-            themeManager.setTheme(newTheme, false); // Don't save to avoid loop
+            themeManager.setTheme(newTheme, false);
         }
     }
 });
 
-// Export for use in other scripts (non-service worker contexts)
 if (typeof window !== 'undefined') {
     window.ThemeManager = ThemeManager;
     window.themeManager = themeManager;
