@@ -1,11 +1,9 @@
-/* Grind Extension - Enhanced Popup Dashboard Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Text size variations */
 body.text-small {
     --base-font-size: 0.8;
 }
@@ -41,7 +39,6 @@ body {
     box-shadow: 4px 4px 0px #666;
 }
 
-/* Header */
 .popup-header {
     display: flex;
     justify-content: space-between;
@@ -127,7 +124,6 @@ body {
     box-shadow: 1px 1px 0px #666;
 }
 
-/* Main Content */
 .popup-main {
     flex: 1;
     padding: 12px;
@@ -137,7 +133,6 @@ body {
     overflow-y: auto;
 }
 
-/* Dashboard Sections */
 .dashboard-section {
     background: #111;
     border: 2px solid #fff;
@@ -153,7 +148,6 @@ body {
     text-transform: uppercase;
 }
 
-/* Current Tab Section */
 .tab-info {
     display: flex;
     flex-direction: column;
@@ -191,7 +185,6 @@ body {
     font-weight: bold;
 }
 
-/* Galaxy Builder Section */
 .galaxy-section {
     background: linear-gradient(135deg, #000011, #000033);
     border: 2px solid #00ffff;
@@ -259,7 +252,6 @@ body {
     font-family: 'Press Start 2P', monospace;
 }
 
-/* Galaxy Controls Section */
 .galaxy-controls-section {
     background: linear-gradient(135deg, #001122, #002244);
     border: 2px solid #ff6600;
@@ -355,7 +347,6 @@ body {
     text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
 }
 
-/* Planet type icon styling */
 .ice-icon {
     color: #87CEEB;
     text-shadow: 0 0 5px rgba(135, 206, 235, 0.8);
@@ -381,7 +372,6 @@ body {
     text-shadow: 0 0 5px rgba(169, 169, 169, 0.8);
 }
 
-/* Light mode galaxy adjustments */
 body.light .galaxy-section {
     background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
     border-color: #0066cc;
@@ -443,7 +433,6 @@ body.light .star-legend .legend-label {
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Light mode planet type icon styling */
 body.light .ice-icon {
     color: #4682B4;
     text-shadow: 0 0 5px rgba(70, 130, 180, 0.8);
@@ -469,7 +458,6 @@ body.light .asteroid-icon {
     text-shadow: 0 0 5px rgba(105, 105, 105, 0.8);
 }
 
-/* Session Stats Section */
 .session-stats {
     display: flex;
     gap: 8px;
@@ -508,7 +496,6 @@ body.light .asteroid-icon {
     text-transform: uppercase;
 }
 
-/* Timer Section */
 .timer-display {
     text-align: center;
     margin-bottom: 12px;
@@ -579,7 +566,6 @@ body.light .asteroid-icon {
     border-color: #ff0000;
 }
 
-/* Recent Sites Section */
 .recent-sites-list {
     max-height: 120px;
     overflow-y: auto;
@@ -614,7 +600,6 @@ body.light .asteroid-icon {
     font-size: calc(6px * var(--base-font-size, 1));
 }
 
-/* Time Limit Display */
 .time-limit-info {
     margin-top: 4px;
 }
@@ -658,7 +643,6 @@ body.light .asteroid-icon {
     100% { transform: translateX(100%); }
 }
 
-/* Site Actions */
 .site-actions {
     display: flex;
     gap: 4px;
@@ -702,7 +686,6 @@ body.light .asteroid-icon {
     background: #cc0000;
 }
 
-/* Blocker Section */
 .blocker-summary {
     display: flex;
     justify-content: space-between;
@@ -729,7 +712,6 @@ body.light .asteroid-icon {
     background: #ff8833;
 }
 
-/* Challenge Section */
 .challenge-display {
     display: flex;
     flex-direction: column;
@@ -775,7 +757,6 @@ body.light .asteroid-icon {
     text-align: center;
 }
 
-/* Achievements Section */
 .achievements-display {
     display: flex;
     gap: 8px;
@@ -813,7 +794,6 @@ body.light .asteroid-icon {
     font-weight: bold;
 }
 
-/* Footer */
 .popup-footer {
     display: flex;
     flex-direction: column;
@@ -865,7 +845,6 @@ body.light .asteroid-icon {
     text-align: center;
 }
 
-/* Light Theme */
 body.light {
     background: #fff;
     color: #000;
@@ -987,7 +966,6 @@ body.light .footer-version {
     color: #666;
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -1017,3 +995,4 @@ body.light ::-webkit-scrollbar-thumb {
 body.light ::-webkit-scrollbar-thumb:hover {
     background: #999;
 }
+
