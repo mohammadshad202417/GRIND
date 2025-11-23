@@ -1,5 +1,4 @@
-// Grind Extension - Enhanced Options Script
-// Theme utility functions (inline to avoid importScripts issues)
+
 class ThemeManager {
     constructor() {
         this.currentTheme = 'dark';
@@ -121,70 +120,56 @@ class ThemeManager {
     }
 }
 
-// Create global instance
 const themeManager = new ThemeManager();
 
-// DOM Elements - will be initialized after DOM loads
 let elements = {};
 
-// State
 let currentSettings = {};
 let hasUnsavedChanges = false;
 let autoSaveEnabled = true;
 
-// Default Settings
 const defaultSettings = {
-    // General Settings
     trackTimeEnabled: true,
     notificationsEnabled: true,
     darkModeEnabled: false,
     textSize: 'medium',
     autoSaveEnabled: true,
     
-    // Privacy Settings
     excludeIncognito: false,
     excludeSystemPages: true,
     anonymizeData: false,
     
-    // Site Blocking & Focus
     blockingEnabled: false,
     blockingLevel: 'custom',
     focusSessionDuration: 25,
     blockedSites: [],
     productiveSites: [],
     
-    // Data Management
     dataRetentionPeriod: 30,
     exportFormat: 'json'
 };
 
-// Initialize DOM Elements
 function initDOMElements() {
     console.log('Initializing DOM elements...');
     
     elements = {
-        // Header
         themeToggle: document.getElementById('themeToggle'),
         autoSaveIndicator: document.getElementById('autoSaveIndicator'),
         
-        // General Settings
         trackTimeEnabled: document.getElementById('trackTimeEnabled'),
         notificationsEnabled: document.getElementById('notificationsEnabled'),
         darkModeEnabled: document.getElementById('darkModeEnabled'),
         textSize: document.getElementById('textSize'),
         autoSaveEnabled: document.getElementById('autoSaveEnabled'),
         
-        // Privacy Settings
         excludeIncognito: document.getElementById('excludeIncognito'),
         excludeSystemPages: document.getElementById('excludeSystemPages'),
         anonymizeData: document.getElementById('anonymizeData'),
         
-        // Site Blocking & Focus
         blockingEnabled: document.getElementById('blockingEnabled'),
         blockingLevel: document.getElementById('blockingLevel'),
         focusSessionDuration: document.getElementById('focusSessionDuration'),
         
-        // Blocked Sites
         blockedSitesList: document.getElementById('blockedSitesList'),
         newBlockedSiteInput: document.getElementById('newBlockedSiteInput'),
         addBlockedSiteBtn: document.getElementById('addBlockedSiteBtn'),
@@ -192,7 +177,6 @@ function initDOMElements() {
         exportBlockedSitesBtn: document.getElementById('exportBlockedSitesBtn'),
         clearBlockedSitesBtn: document.getElementById('clearBlockedSitesBtn'),
         
-        // Productive Sites
         productiveSitesList: document.getElementById('productiveSitesList'),
         newProductiveSiteInput: document.getElementById('newProductiveSiteInput'),
         addProductiveSiteBtn: document.getElementById('addProductiveSiteBtn'),
@@ -200,7 +184,6 @@ function initDOMElements() {
         exportProductiveSitesBtn: document.getElementById('exportProductiveSitesBtn'),
         clearProductiveSitesBtn: document.getElementById('clearProductiveSitesBtn'),
         
-        // Data Management
         dataRetentionPeriod: document.getElementById('dataRetentionPeriod'),
         exportFormat: document.getElementById('exportFormat'),
         exportAllDataBtn: document.getElementById('exportAllDataBtn'),
@@ -209,21 +192,18 @@ function initDOMElements() {
         clearAllDataBtn: document.getElementById('clearAllDataBtn'),
         resetAllSettingsBtn: document.getElementById('resetAllSettingsBtn'),
         
-        // Statistics
         tabsTracked: document.getElementById('tabsTracked'),
         tabSwitchesTracked: document.getElementById('tabSwitchesTracked'),
         timeTracked: document.getElementById('timeTracked'),
         uniqueDomains: document.getElementById('uniqueDomains'),
         dataSize: document.getElementById('dataSize'),
         
-        // Footer
         saveControls: document.getElementById('saveControls'),
         saveSettingsBtn: document.getElementById('saveSettingsBtn'),
         cancelChangesBtn: document.getElementById('cancelChangesBtn'),
         unsavedIndicator: document.getElementById('unsavedIndicator')
     };
     
-    // Debug: Check if Data Management buttons are found
     console.log('Data Management buttons found:');
     console.log('exportAllDataBtn:', !!elements.exportAllDataBtn);
     console.log('importAllDataBtn:', !!elements.importAllDataBtn);
@@ -231,11 +211,9 @@ function initDOMElements() {
     console.log('clearAllDataBtn:', !!elements.clearAllDataBtn);
     console.log('resetAllSettingsBtn:', !!elements.resetAllSettingsBtn);
     
-    // Debug: Check if buttons exist in DOM
     console.log('All buttons in DOM:', document.querySelectorAll('button[id*="Data"], button[id*="Settings"]'));
 }
 
-// Initialize Options Page
 document.addEventListener('DOMContentLoaded', () => {
     initOptions();
 });
@@ -243,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initOptions() {
     try {
         initDOMElements();
-        // Load theme BEFORE applying it
         await themeManager.loadThemePreference();
         await loadSettings();
         await loadStatistics();
@@ -256,17 +233,14 @@ async function initOptions() {
     }
 }
 
-// Load Settings
 async function loadSettings() {
     try {
         const result = await chrome.storage.sync.get(defaultSettings);
         currentSettings = { ...defaultSettings, ...result };
         
-        // Apply settings to UI
         elements.trackTimeEnabled.checked = currentSettings.trackTimeEnabled;
         elements.notificationsEnabled.checked = currentSettings.notificationsEnabled;
         
-        // Load theme and sync with checkbox
         const themeResult = await chrome.storage.sync.get(['theme']);
         const currentTheme = themeResult.theme || 'dark';
         elements.darkModeEnabled.checked = (currentTheme === 'dark');
@@ -274,12 +248,10 @@ async function loadSettings() {
         elements.textSize.value = currentSettings.textSize;
         elements.autoSaveEnabled.checked = currentSettings.autoSaveEnabled;
         
-        // Load and apply autoSaveEnabled setting
-        autoSaveEnabled = currentSettings.autoSaveEnabled !== false; // Default to true
+        autoSaveEnabled = currentSettings.autoSaveEnabled !== false; 
         elements.autoSaveEnabled.checked = autoSaveEnabled;
         updateAutoSaveIndicator();
         
-        // Apply text size
         applyTextSize(currentSettings.textSize);
         
         elements.excludeIncognito.checked = currentSettings.excludeIncognito;
@@ -293,7 +265,6 @@ async function loadSettings() {
         elements.dataRetentionPeriod.value = currentSettings.dataRetentionPeriod;
         elements.exportFormat.value = currentSettings.exportFormat;
         
-        // Load sites lists
         await loadBlockedSites();
         await loadProductiveSites();
         
@@ -305,7 +276,6 @@ async function loadSettings() {
     }
 }
 
-// Load Blocked Sites
 async function loadBlockedSites() {
     try {
         const result = await chrome.storage.sync.get(['blockedSites']);
@@ -316,7 +286,6 @@ async function loadBlockedSites() {
     }
 }
 
-// Load Productive Sites
 async function loadProductiveSites() {
     try {
         const result = await chrome.storage.sync.get(['productiveSites']);
@@ -327,7 +296,6 @@ async function loadProductiveSites() {
     }
 }
 
-// Update Blocked Sites List
 function updateBlockedSitesList(sites) {
     elements.blockedSitesList.innerHTML = '';
     
@@ -347,7 +315,6 @@ function updateBlockedSitesList(sites) {
     });
 }
 
-// Update Productive Sites List
 function updateProductiveSitesList(sites) {
     elements.productiveSitesList.innerHTML = '';
     
@@ -367,23 +334,19 @@ function updateProductiveSitesList(sites) {
     });
 }
 
-// Load Statistics
 async function loadStatistics() {
     try {
         const result = await chrome.storage.local.get(['websiteStats', 'sessionData']);
         const websiteStats = result.websiteStats || {};
         const sessionData = result.sessionData || {};
         
-        // Calculate statistics
         const uniqueDomains = Object.keys(websiteStats).length;
         const totalTime = Object.values(websiteStats).reduce((sum, site) => sum + (site.timeSpent || 0), 0);
         const tabsOpened = sessionData.tabsOpened || 0;
         const tabSwitches = sessionData.tabSwitches || 0;
         
-        // Calculate data size (approximate)
         const dataSize = JSON.stringify({ websiteStats, sessionData }).length;
         
-        // Update UI
         if (elements.tabsTracked) elements.tabsTracked.textContent = tabsOpened;
         if (elements.tabSwitchesTracked) elements.tabSwitchesTracked.textContent = tabSwitches;
         if (elements.timeTracked) elements.timeTracked.textContent = formatTime(totalTime);
@@ -397,7 +360,6 @@ async function loadStatistics() {
     }
 }
 
-// Format Time
 function formatTime(milliseconds) {
     const seconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(seconds / 3600);
@@ -412,33 +374,27 @@ function formatTime(milliseconds) {
     }
 }
 
-// Format Data Size
 function formatDataSize(bytes) {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
     return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
 
-// Add visual feedback to button clicks
 function addButtonClickFeedback(button, action) {
     if (!button) return;
     
     const originalText = button.textContent;
     const originalTransform = button.style.transform;
     
-    // Add click animation
     button.addEventListener('click', function(e) {
-        // Prevent multiple rapid clicks
         if (button.disabled) {
             e.preventDefault();
             return;
         }
         
-        // Visual feedback
         button.style.transform = 'scale(0.95)';
         button.style.opacity = '0.8';
         
-        // Reset after animation
         setTimeout(() => {
             button.style.transform = originalTransform;
             button.style.opacity = '1';
@@ -446,11 +402,9 @@ function addButtonClickFeedback(button, action) {
     });
 }
 
-// Setup Data Management Buttons with Fallback
 function setupDataManagementButtons() {
     console.log('Setting up Data Management buttons...');
     
-    // Try multiple approaches to find and setup buttons
     const buttonIds = [
         'exportAllDataBtn',
         'importAllDataBtn', 
@@ -462,21 +416,19 @@ function setupDataManagementButtons() {
     buttonIds.forEach(id => {
         let element = elements[id];
         
-        // Fallback: try to find element directly if not in elements object
         if (!element) {
             element = document.getElementById(id);
             console.log(`Fallback: Found ${id}:`, !!element);
         }
         
         if (element) {
-            elements[id] = element; // Update elements object
+            elements[id] = element; 
             console.log(`✅ ${id} found and ready`);
         } else {
             console.error(`❌ ${id} not found in DOM`);
         }
     });
     
-    // Setup Export Data Button
     if (elements.exportAllDataBtn) {
         console.log('Adding export data button listener');
         elements.exportAllDataBtn.addEventListener('click', exportAllData);
@@ -484,7 +436,6 @@ function setupDataManagementButtons() {
         elements.exportAllDataBtn.style.cursor = 'pointer';
     } else {
         console.error('Export data button not found!');
-        // Try fallback approach
         const exportBtn = document.querySelector('button[id="exportAllDataBtn"]');
         if (exportBtn) {
             console.log('Fallback: Found export button via querySelector');
@@ -494,7 +445,6 @@ function setupDataManagementButtons() {
         }
     }
     
-    // Setup Import Data Button
     if (elements.importAllDataBtn) {
         console.log('Adding import data button listener');
         elements.importAllDataBtn.addEventListener('click', () => {
@@ -507,7 +457,6 @@ function setupDataManagementButtons() {
         elements.importAllDataBtn.style.cursor = 'pointer';
     } else {
         console.error('Import data button not found!');
-        // Try fallback approach
         const importBtn = document.querySelector('button[id="importAllDataBtn"]');
         if (importBtn) {
             console.log('Fallback: Found import button via querySelector');
@@ -520,7 +469,6 @@ function setupDataManagementButtons() {
         }
     }
     
-    // Setup Import File Input
     if (elements.importAllDataFile) {
         elements.importAllDataFile.addEventListener('change', importAllData);
     } else {
@@ -531,7 +479,6 @@ function setupDataManagementButtons() {
         }
     }
     
-    // Setup Clear All Data Button
     if (elements.clearAllDataBtn) {
         console.log('Adding clear data button listener');
         elements.clearAllDataBtn.addEventListener('click', clearAllData);
@@ -539,7 +486,6 @@ function setupDataManagementButtons() {
         elements.clearAllDataBtn.style.cursor = 'pointer';
     } else {
         console.error('Clear data button not found!');
-        // Try fallback approach
         const clearBtn = document.querySelector('button[id="clearAllDataBtn"]');
         if (clearBtn) {
             console.log('Fallback: Found clear button via querySelector');
@@ -549,7 +495,6 @@ function setupDataManagementButtons() {
         }
     }
     
-    // Setup Reset Settings Button
     if (elements.resetAllSettingsBtn) {
         console.log('Adding reset settings button listener');
         elements.resetAllSettingsBtn.addEventListener('click', resetAllSettings);
@@ -557,7 +502,6 @@ function setupDataManagementButtons() {
         elements.resetAllSettingsBtn.style.cursor = 'pointer';
     } else {
         console.error('Reset settings button not found!');
-        // Try fallback approach
         const resetBtn = document.querySelector('button[id="resetAllSettingsBtn"]');
         if (resetBtn) {
             console.log('Fallback: Found reset button via querySelector');
@@ -570,12 +514,9 @@ function setupDataManagementButtons() {
     console.log('Data Management buttons setup complete');
 }
 
-// Setup Event Listeners
 function setupEventListeners() {
-    // Theme toggle
     elements.themeToggle.addEventListener('click', toggleTheme);
     
-    // General settings
     elements.trackTimeEnabled.addEventListener('change', handleSettingChange);
     elements.notificationsEnabled.addEventListener('change', handleSettingChange);
     elements.darkModeEnabled.addEventListener('change', async (e) => {
@@ -586,17 +527,14 @@ function setupEventListeners() {
     elements.textSize.addEventListener('change', handleSettingChange);
     elements.autoSaveEnabled.addEventListener('change', handleAutoSaveChange);
     
-    // Privacy settings
     elements.excludeIncognito.addEventListener('change', handleSettingChange);
     elements.excludeSystemPages.addEventListener('change', handleSettingChange);
     elements.anonymizeData.addEventListener('change', handleSettingChange);
     
-    // Site blocking settings
     elements.blockingEnabled.addEventListener('change', handleSettingChange);
     elements.blockingLevel.addEventListener('change', handleSettingChange);
     elements.focusSessionDuration.addEventListener('change', handleSettingChange);
     
-    // Blocked sites
     elements.addBlockedSiteBtn.addEventListener('click', addBlockedSite);
     elements.newBlockedSiteInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addBlockedSite();
@@ -605,7 +543,6 @@ function setupEventListeners() {
     elements.exportBlockedSitesBtn.addEventListener('click', exportBlockedSites);
     elements.clearBlockedSitesBtn.addEventListener('click', clearBlockedSites);
     
-    // Productive sites
     elements.addProductiveSiteBtn.addEventListener('click', addProductiveSite);
     elements.newProductiveSiteInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addProductiveSite();
@@ -614,7 +551,6 @@ function setupEventListeners() {
     elements.exportProductiveSitesBtn.addEventListener('click', exportProductiveSites);
     elements.clearProductiveSitesBtn.addEventListener('click', clearProductiveSites);
     
-    // Data management
     if (elements.dataRetentionPeriod) {
         elements.dataRetentionPeriod.addEventListener('change', handleSettingChange);
     }
@@ -622,14 +558,11 @@ function setupEventListeners() {
         elements.exportFormat.addEventListener('change', handleSettingChange);
     }
     
-    // Setup Data Management buttons with fallback
     setupDataManagementButtons();
     
-    // Footer controls
     elements.saveSettingsBtn.addEventListener('click', saveSettings);
     elements.cancelChangesBtn.addEventListener('click', cancelChanges);
     
-    // Preset buttons
     document.querySelectorAll('.preset-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const sites = e.target.dataset.sites.split(',');
@@ -638,7 +571,6 @@ function setupEventListeners() {
         });
     });
     
-    // Site removal (delegated event listeners)
     elements.blockedSitesList.addEventListener('click', (e) => {
         if (e.target.classList.contains('site-remove')) {
             removeBlockedSite(e.target.dataset.site);
@@ -652,25 +584,20 @@ function setupEventListeners() {
     });
 }
 
-// Handle Setting Changes
 function handleSettingChange(event) {
     hasUnsavedChanges = true;
     updateUnsavedIndicator();
     
-    // Get the setting name from the element
     let settingName = 'Setting';
     if (event && event.target) {
         const element = event.target;
         settingName = element.id || element.name || 'Setting';
         
-        // Convert camelCase to readable format
         settingName = settingName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     }
     
-    // Show notification for setting change
     showNotification(`⚙️ ${settingName} changed`, 'info', 1500);
     
-    // Apply text size if it changed
     if (event && event.target && event.target.id === 'textSize') {
         applyTextSize(event.target.value);
     }
@@ -680,12 +607,10 @@ function handleSettingChange(event) {
     }
 }
 
-// Handle Auto Save Change
 async function handleAutoSaveChange() {
     autoSaveEnabled = elements.autoSaveEnabled.checked;
     updateAutoSaveIndicator();
     
-    // Save the auto-save preference immediately
     await chrome.storage.sync.set({ autoSaveEnabled: autoSaveEnabled });
     
     if (autoSaveEnabled && hasUnsavedChanges) {
@@ -693,25 +618,19 @@ async function handleAutoSaveChange() {
     }
 }
 
-// Toggle Theme
 async function toggleTheme() {
     await themeManager.toggleTheme();
-    // Update checkbox to match
     elements.darkModeEnabled.checked = themeManager.isDarkTheme();
 }
 
-// Apply Theme
 function applyTheme() {
     themeManager.applyThemeToDocument();
 }
 
-// Apply Text Size
 function applyTextSize(size = 'medium') {
-    // Remove any existing text size classes
     document.body.className = document.body.className
         .replace(/text-(small|medium|large|extra-large)/g, '');
     
-    // Add the new text size class
     document.body.classList.add(`text-${size}`);
     
     console.log('Text size applied:', size);
@@ -719,7 +638,6 @@ function applyTextSize(size = 'medium') {
     console.log('Body font-size:', window.getComputedStyle(document.body).fontSize);
 }
 
-// Update Auto Save Indicator
 function updateAutoSaveIndicator() {
     if (autoSaveEnabled) {
         elements.autoSaveIndicator.style.display = 'flex';
@@ -732,7 +650,6 @@ function updateAutoSaveIndicator() {
     }
 }
 
-// Update Unsaved Indicator
 function updateUnsavedIndicator() {
     if (hasUnsavedChanges && !autoSaveEnabled) {
         elements.unsavedIndicator.style.display = 'flex';
@@ -745,7 +662,6 @@ function updateUnsavedIndicator() {
     }
 }
 
-// Add Blocked Site
 async function addBlockedSite() {
     const domain = elements.newBlockedSiteInput.value.trim();
     
@@ -776,7 +692,6 @@ async function addBlockedSite() {
     }
 }
 
-// Add Productive Site
 async function addProductiveSite() {
     const domain = elements.newProductiveSiteInput.value.trim();
     
@@ -807,7 +722,6 @@ async function addProductiveSite() {
     }
 }
 
-// Remove Blocked Site
 async function removeBlockedSite(domain) {
     try {
         const result = await chrome.storage.sync.get(['blockedSites']);
@@ -824,7 +738,6 @@ async function removeBlockedSite(domain) {
     }
 }
 
-// Remove Productive Site
 async function removeProductiveSite(domain) {
     try {
         const result = await chrome.storage.sync.get(['productiveSites']);
@@ -841,7 +754,6 @@ async function removeProductiveSite(domain) {
     }
 }
 
-// Add Preset Sites
 async function addPresetSites(sites, isProductive = false) {
     try {
         const key = isProductive ? 'productiveSites' : 'blockedSites';
@@ -872,7 +784,6 @@ async function addPresetSites(sites, isProductive = false) {
     }
 }
 
-// Import Blocked Sites
 function importBlockedSites() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -898,7 +809,6 @@ function importBlockedSites() {
     input.click();
 }
 
-// Export Blocked Sites
 async function exportBlockedSites() {
     try {
         const result = await chrome.storage.sync.get(['blockedSites']);
@@ -927,7 +837,6 @@ async function exportBlockedSites() {
     }
 }
 
-// Clear Blocked Sites
 async function clearBlockedSites() {
     if (!confirm('Are you sure you want to clear all blocked sites?')) return;
     
@@ -942,7 +851,6 @@ async function clearBlockedSites() {
     }
 }
 
-// Import Productive Sites
 function importProductiveSites() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -968,7 +876,6 @@ function importProductiveSites() {
     input.click();
 }
 
-// Export Productive Sites
 async function exportProductiveSites() {
     try {
         const result = await chrome.storage.sync.get(['productiveSites']);
@@ -997,7 +904,6 @@ async function exportProductiveSites() {
     }
 }
 
-// Clear Productive Sites
 async function clearProductiveSites() {
     if (!confirm('Are you sure you want to clear all productive sites?')) return;
     
@@ -1012,10 +918,8 @@ async function clearProductiveSites() {
     }
 }
 
-// Export All Data
 async function exportAllData() {
     try {
-        // Add visual feedback
         if (elements.exportAllDataBtn) {
             elements.exportAllDataBtn.style.transform = 'scale(0.95)';
             elements.exportAllDataBtn.textContent = 'EXPORTING...';
@@ -1054,7 +958,6 @@ async function exportAllData() {
         console.error('Error exporting data:', error);
         showNotification('❌ Error exporting data: ' + error.message, 'error', 5000);
     } finally {
-        // Reset button state
         if (elements.exportAllDataBtn) {
             elements.exportAllDataBtn.style.transform = 'scale(1)';
             elements.exportAllDataBtn.textContent = 'EXPORT DATA';
@@ -1063,7 +966,6 @@ async function exportAllData() {
     }
 }
 
-// Import All Data
 async function importAllData() {
     const file = elements.importAllDataFile.files[0];
     if (!file) {
@@ -1072,7 +974,6 @@ async function importAllData() {
     }
     
     try {
-        // Add visual feedback
         if (elements.importAllDataBtn) {
             elements.importAllDataBtn.style.transform = 'scale(0.95)';
             elements.importAllDataBtn.textContent = 'IMPORTING...';
@@ -1095,7 +996,6 @@ async function importAllData() {
             console.log('Local data imported');
         }
         
-        // Reload settings and statistics
         await loadSettings();
         await loadStatistics();
         
@@ -1106,25 +1006,21 @@ async function importAllData() {
         console.error('Error importing data:', error);
         showNotification('❌ Error importing data: ' + error.message, 'error', 5000);
     } finally {
-        // Reset button state
         if (elements.importAllDataBtn) {
             elements.importAllDataBtn.style.transform = 'scale(1)';
             elements.importAllDataBtn.textContent = 'IMPORT DATA';
             elements.importAllDataBtn.disabled = false;
         }
-        // Clear file input
         if (elements.importAllDataFile) {
             elements.importAllDataFile.value = '';
         }
     }
 }
 
-// Clear All Data
 async function clearAllData() {
     if (!confirm('⚠️ Are you sure you want to clear ALL data? This cannot be undone!')) return;
     
     try {
-        // Add visual feedback
         if (elements.clearAllDataBtn) {
             elements.clearAllDataBtn.style.transform = 'scale(0.95)';
             elements.clearAllDataBtn.textContent = 'CLEARING...';
@@ -1137,10 +1033,8 @@ async function clearAllData() {
         await chrome.storage.local.clear();
         await chrome.storage.sync.clear();
         
-        // Reset to defaults
         await chrome.storage.sync.set(defaultSettings);
         
-        // Reload settings and statistics
         await loadSettings();
         await loadStatistics();
         
@@ -1151,7 +1045,6 @@ async function clearAllData() {
         console.error('Error clearing data:', error);
         showNotification('❌ Error clearing data: ' + error.message, 'error', 5000);
     } finally {
-        // Reset button state
         if (elements.clearAllDataBtn) {
             elements.clearAllDataBtn.style.transform = 'scale(1)';
             elements.clearAllDataBtn.textContent = 'CLEAR ALL DATA';
@@ -1160,12 +1053,10 @@ async function clearAllData() {
     }
 }
 
-// Reset All Settings
 async function resetAllSettings() {
     if (!confirm('⚠️ Are you sure you want to reset all settings to defaults?')) return;
     
     try {
-        // Add visual feedback
         if (elements.resetAllSettingsBtn) {
             elements.resetAllSettingsBtn.style.transform = 'scale(0.95)';
             elements.resetAllSettingsBtn.textContent = 'RESETTING...';
@@ -1177,7 +1068,6 @@ async function resetAllSettings() {
         console.log('Starting settings reset...');
         await chrome.storage.sync.set(defaultSettings);
         
-        // Reload settings
         await loadSettings();
         
         showNotification('✅ Settings reset to defaults! All preferences restored.', 'success', 4000);
@@ -1187,7 +1077,6 @@ async function resetAllSettings() {
         console.error('Error resetting settings:', error);
         showNotification('❌ Error resetting settings: ' + error.message, 'error', 5000);
     } finally {
-        // Reset button state
         if (elements.resetAllSettingsBtn) {
             elements.resetAllSettingsBtn.style.transform = 'scale(1)';
             elements.resetAllSettingsBtn.textContent = 'RESET SETTINGS';
@@ -1196,10 +1085,8 @@ async function resetAllSettings() {
     }
 }
 
-// Save Settings
 async function saveSettings() {
     try {
-        // Collect current settings
         const settings = {
             trackTimeEnabled: elements.trackTimeEnabled.checked,
             notificationsEnabled: elements.notificationsEnabled.checked,
@@ -1232,11 +1119,9 @@ async function saveSettings() {
     }
 }
 
-// Cancel Changes
 function cancelChanges() {
     if (!confirm('Are you sure you want to cancel unsaved changes?')) return;
     
-    // Reload settings from storage
     loadSettings();
     
     hasUnsavedChanges = false;
@@ -1245,29 +1130,24 @@ function cancelChanges() {
     showNotification('Changes cancelled', 'info');
 }
 
-// Utility Functions
 function isValidDomain(domain) {
     const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
     return domainRegex.test(domain);
 }
 
 function showNotification(message, type = 'info', duration = 3000) {
-    // Check if notifications are enabled
     chrome.storage.sync.get(['notificationsEnabled']).then(settings => {
         if (settings.notificationsEnabled === false) {
             console.log('Notifications disabled, skipping:', message);
             return;
         }
         
-        // Remove any existing notifications
         const existingNotifications = document.querySelectorAll('.grind-notification');
         existingNotifications.forEach(notif => notif.remove());
         
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `grind-notification notification-${type}`;
         
-        // Create notification content
         const icon = getNotificationIcon(type);
         notification.innerHTML = `
             <div class="notification-content">
@@ -1277,7 +1157,6 @@ function showNotification(message, type = 'info', duration = 3000) {
             <div class="notification-progress"></div>
         `;
         
-        // Style the notification
         Object.assign(notification.style, {
             position: 'fixed',
             top: '20px',
@@ -1297,7 +1176,6 @@ function showNotification(message, type = 'info', duration = 3000) {
             transition: 'transform 0.3s ease-in-out'
         });
         
-        // Style notification content
         const content = notification.querySelector('.notification-content');
         Object.assign(content.style, {
             display: 'flex',
@@ -1305,13 +1183,11 @@ function showNotification(message, type = 'info', duration = 3000) {
             gap: '12px'
         });
         
-        // Style notification icon
         const iconEl = notification.querySelector('.notification-icon');
         Object.assign(iconEl.style, {
             fontSize: '16px'
         });
         
-        // Style progress bar
         const progress = notification.querySelector('.notification-progress');
         Object.assign(progress.style, {
             position: 'absolute',
@@ -1327,17 +1203,14 @@ function showNotification(message, type = 'info', duration = 3000) {
         
         document.body.appendChild(notification);
         
-        // Animate in
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 10);
         
-        // Animate progress bar
         setTimeout(() => {
             progress.style.transform = 'scaleX(0)';
         }, 100);
         
-        // Remove after duration
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -1393,24 +1266,20 @@ function getNotificationTextColor(type, isDarkMode = true) {
     }
 }
 
-// Listen for storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
             if (namespace === 'sync') {
-                // Sync theme changes with checkbox
                 if (changes.theme) {
                     const newTheme = changes.theme.newValue || 'dark';
                     elements.darkModeEnabled.checked = (newTheme === 'dark');
                 }
                 
-                // Apply text size changes
                 if (changes.textSize) {
                     applyTextSize(changes.textSize.newValue || 'medium');
                 }
                 
-                // Reload settings if they changed externally
                 loadSettings();
             } else if (namespace === 'local') {
-        // Reload statistics if data changed
         loadStatistics();
     }
 });
+
