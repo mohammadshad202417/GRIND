@@ -1,7 +1,5 @@
-// Grind Extension - Enhanced Popup Dashboard Script
 console.log('Grind Extension popup dashboard loaded');
 
-// DOM Elements - will be initialized after DOM loads
 let themeToggle, levelBadge, xpFill, xpText, currentDomain, currentTime, currentVisits;
 let galaxyCanvas, starCount, galaxyAge, constellationName, constellationProgress;
 let tabsOpened, tabSwitches, totalSessionTime, focusTimer, timerMode, startTimer, pauseTimer, resetTimer;
@@ -9,7 +7,6 @@ let recentSitesList, blockedCount, addSiteBtn, challengeText, challengeProgress;
 let challengeProgressText, challengeReward, streakValue, levelValue, xpValue;
 let optionsBtn, helpBtn;
 
-// State
 let currentTheme = 'dark';
 let galaxyManager = null;
 let focusTimerInterval = null;
@@ -27,7 +24,6 @@ let dailyChallenge = {
     reward: 50
 };
 
-// Initialize DOM Elements
 function initDOMElements() {
     themeToggle = document.getElementById('themeToggle');
     levelBadge = document.getElementById('levelBadge');
@@ -63,30 +59,23 @@ function initDOMElements() {
     helpBtn = document.getElementById('helpBtn');
 }
 
-// Initialize popup dashboard
 async function initPopup() {
     console.log('Initializing popup dashboard');
 
     try {
-        // Initialize DOM elements first
         initDOMElements();
 
-        // Set up event listeners
         setupEventListeners();
 
-        // Wait a bit to ensure background script is ready
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Load theme from storage
         const result = await chrome.storage.sync.get(['theme']);
         currentTheme = result.theme || 'dark';
 
-        // Load text size from storage
         const textSizeResult = await chrome.storage.sync.get(['textSize']);
         const textSize = textSizeResult.textSize || 'medium';
         applyTextSize(textSize);
 
-        // Load all data
         await loadUserData();
         await loadCurrentTabInfo();
         await loadSessionStats();
@@ -95,7 +84,6 @@ async function initPopup() {
         await loadBlockedSites();
         await loadDailyChallenge();
 
-        // Trigger immediate blocking check for all tabs
         try {
             await chrome.runtime.sendMessage({ action: 'checkAllTabsForBlocking' });
             console.log('Triggered immediate blocking check for all tabs');
@@ -103,43 +91,35 @@ async function initPopup() {
             console.error('Error triggering blocking check:', error);
         }
 
-        // Initialize galaxy system
         await initGalaxy();
 
-        // Set up galaxy controls as fallback (in case timing issues)
         setTimeout(() => {
             if (galaxyManager) {
                 galaxyManager.setupEventListeners();
             }
         }, 100);
 
-        // Additional fallback for galaxy controls
         setTimeout(() => {
             setupGalaxyControls();
         }, 500);
 
-        // Run planet rendering test
         setTimeout(() => {
             testPlanetRenderingWithDurations();
         }, 1000);
 
-        // Apply theme
         applyTheme();
 
-        // Start update intervals
         startUpdateIntervals();
 
         console.log('Popup dashboard initialized successfully');
     } catch (error) {
         console.error('Error initializing popup:', error);
-        // Show error message to user
         if (currentDomain) {
             currentDomain.textContent = 'Error loading data';
         }
     }
 }
 
-// Load user data
 async function loadUserData() {
     try {
         const result = await chrome.storage.local.get(['userStats', 'dailyChallenge']);
@@ -158,7 +138,6 @@ async function loadUserData() {
     }
 }
 
-// Load current tab information
 async function loadCurrentTabInfo() {
     try {
         console.log('Loading current tab information...');
@@ -181,7 +160,6 @@ async function loadCurrentTabInfo() {
                 console.log('Set current domain display:', domain);
             }
 
-            // Get website stats with better error handling
             let websiteStats = null;
             try {
                 websiteStats = await chrome.runtime.sendMessage({ action: 'getWebsiteStats' });
@@ -192,7 +170,6 @@ async function loadCurrentTabInfo() {
                 websiteStats = {};
             }
 
-            // Validate websiteStats structure
             if (!websiteStats || typeof websiteStats !== 'object') {
                 console.warn('Invalid website stats received, using empty object');
                 websiteStats = {};
@@ -202,7 +179,6 @@ async function loadCurrentTabInfo() {
             console.log('Site data for domain:', siteData);
 
             if (siteData && typeof siteData === 'object') {
-                // Validate and display time
                 if (currentTime) {
                     const timeSpent = siteData.timeSpent || 0;
                     if (typeof timeSpent === 'number' && timeSpent >= 0) {
@@ -216,7 +192,6 @@ async function loadCurrentTabInfo() {
                     }
                 }
 
-                // Validate and display visits
                 if (currentVisits) {
                     const visits = siteData.visits || 0;
                     if (typeof visits === 'number' && visits >= 0) {
@@ -244,17 +219,14 @@ async function loadCurrentTabInfo() {
         console.error('Error loading current tab info:', error);
         console.error('Error stack:', error.stack);
 
-        // Set error state with more specific messaging
         if (currentDomain) currentDomain.textContent = 'Error loading data';
         if (currentTime) currentTime.textContent = '0s';
         if (currentVisits) currentVisits.textContent = '0';
 
-        // Show user-friendly error notification
         showPopupNotification('Error loading tab information', 'error', 3000);
     }
 }
 
-// Load session statistics
 async function loadSessionStats() {
     try {
         const sessionData = await chrome.runtime.sendMessage({ action: 'getSessionData' });
@@ -263,14 +235,12 @@ async function loadSessionStats() {
         tabSwitches.textContent = sessionData.tabSwitches || 0;
         totalSessionTime.textContent = `${Math.round((sessionData.totalTime || 0) / 60000)}m`;
 
-        // Update galaxy display
         updateGalaxy();
     } catch (error) {
         console.error('Error loading session stats:', error);
     }
 }
 
-// Galaxy Manager for pixel art star generation and rendering
 class GalaxyManager {
     constructor() {
         this.canvas = null;
@@ -289,7 +259,6 @@ class GalaxyManager {
         this.currentConstellation = 'Orion';
         this.firstSessionDate = null;
 
-        // Initialize background elements
         this.generateBackgroundElements();
     }
 
@@ -298,8 +267,8 @@ class GalaxyManager {
         if (!this.canvas) return;
 
         this.ctx = this.canvas.getContext('2d');
-        this.ctx.imageSmoothingEnabled = false; // Preserve pixel-art quality
-        this.ctx.imageSmoothingQuality = 'low'; // Pixel art rendering
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.imageSmoothingQuality = 'low';
 
         await this.loadGalaxyData();
         this.setupEventListeners();
@@ -342,31 +311,26 @@ class GalaxyManager {
         const uniquePlanet = this.generateUniquePlanet(planetType);
 
         const star = {
-            id: Date.now() + Math.random(), // Ensure unique ID
+            id: Date.now() + Math.random(),
             x: this.galaxyCenter.x + (Math.random() - 0.5) * 160,
             y: this.galaxyCenter.y + (Math.random() - 0.5) * 120,
             radius: Math.max(72, Math.min(160, Math.floor(sessionDuration * 2.7))),
             planetType: planetType,
-
-            // Unique visual properties
             primaryColor: uniquePlanet.primaryColor,
             secondaryColor: uniquePlanet.secondaryColor,
             accentColor: uniquePlanet.accentColor,
             pattern: uniquePlanet.pattern,
             features: uniquePlanet.features,
             textureVariant: uniquePlanet.textureVariant,
-            rotation: Math.random() * 360, // Each planet has unique rotation
-
-            // Orbital properties (realistic speed)
+            rotation: Math.random() * 360,
             orbitRadius: Math.floor(Math.random() * 120) + 40,
-            orbitSpeed: Math.random() * 0.0003 + 0.0001, // Much slower, more realistic // 0.0005-0.0015 range
+            orbitSpeed: Math.random() * 0.0003 + 0.0001,
             orbitAngle: Math.random() * Math.PI * 2,
             createdAt: Date.now()
         };
 
         this.stars.push(star);
 
-        // Set first session date if this is the first star
         if (!this.firstSessionDate) {
             this.firstSessionDate = Date.now();
         }
@@ -387,14 +351,9 @@ class GalaxyManager {
     }
 
     generateUniquePlanet(planetType) {
-        // Generate unique color combination for each planet
         const uniqueColors = this.generateUniqueColorPalette(planetType);
-
-        // Select random pattern and features
         const patterns = this.getPlanetPatterns(planetType);
         const features = this.getPlanetFeatures(planetType);
-
-        // Generate unique seed for this planet
         const planetSeed = Date.now() + Math.random() * 1000000;
 
         return {
@@ -402,12 +361,12 @@ class GalaxyManager {
             secondaryColor: uniqueColors.secondary,
             accentColor: uniqueColors.accent,
             pattern: patterns[Math.floor(Math.random() * patterns.length)],
-            features: this.selectRandomFeatures(features, Math.floor(Math.random() * 3) + 1), // 1-3 random features
-            textureVariant: Math.floor(Math.random() * 7), // 7 texture variations per type
-            planetSeed: planetSeed, // Unique seed for consistent randomness
-            rotationSpeed: Math.random() * 0.02 + 0.01, // Unique rotation speed
-            atmosphere: this.generateAtmosphere(planetType), // Unique atmosphere properties
-            surfaceDetails: this.generateSurfaceDetails(planetType) // Unique surface details
+            features: this.selectRandomFeatures(features, Math.floor(Math.random() * 3) + 1),
+            textureVariant: Math.floor(Math.random() * 7),
+            planetSeed: planetSeed,
+            rotationSpeed: Math.random() * 0.02 + 0.01,
+            atmosphere: this.generateAtmosphere(planetType),
+            surfaceDetails: this.generateSurfaceDetails(planetType)
         };
     }
 
@@ -434,30 +393,29 @@ class GalaxyManager {
     }
 
     generateUniqueColorPalette(planetType) {
-        // Generate random color variations within type constraints
         const colorRanges = {
             asteroid: {
-                hueRange: [0, 40], // Gray to brown
+                hueRange: [0, 40],
                 satRange: [0, 30],
                 lightRange: [30, 60]
             },
             rocky: {
-                hueRange: [0, 40], // Red to orange
+                hueRange: [0, 40],
                 satRange: [40, 80],
                 lightRange: [40, 70]
             },
             earth: {
-                hueRange: [180, 240], // Blue to cyan
+                hueRange: [180, 240],
                 satRange: [50, 90],
                 lightRange: [45, 75]
             },
             gas: {
-                hueRange: [20, 60], // Orange to yellow
+                hueRange: [20, 60],
                 satRange: [60, 100],
                 lightRange: [50, 80]
             },
             ice: {
-                hueRange: [180, 220], // Cyan to light blue
+                hueRange: [180, 220],
                 satRange: [50, 100],
                 lightRange: [70, 95]
             }
@@ -470,8 +428,8 @@ class GalaxyManager {
 
         return {
             primary: `hsl(${hue}, ${sat}%, ${light}%)`,
-            secondary: `hsl(${hue + 20}, ${sat - 15}%, ${light - 20}%)`, // More contrast
-            accent: `hsl(${hue - 25}, ${Math.min(sat + 20, 100)}%, ${Math.min(light + 15, 95)})` // Brighter
+            secondary: `hsl(${hue + 20}, ${sat - 15}%, ${light - 20}%)`,
+            accent: `hsl(${hue - 25}, ${Math.min(sat + 20, 100)}%, ${Math.min(light + 15, 95)})`
         };
     }
 
@@ -593,23 +551,18 @@ class GalaxyManager {
     render() {
         if (!this.ctx) return;
 
-        // Clear canvas with pixel-perfect background
         this.ctx.fillStyle = '#000011';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw background stars
-        // Draw background elements
         this.drawBackgroundElements();
 
         this.drawBackgroundStars();
 
-        // Draw galaxy planets with orbital movement
         this.stars.forEach(planet => {
             this.updateStarOrbit(planet);
             this.drawPlanet(planet);
         });
 
-        // Draw galaxy center
         this.drawGalaxyCenter();
     }
 
@@ -618,12 +571,10 @@ class GalaxyManager {
         const y = Math.floor(planet.y);
         const radius = Math.floor(planet.radius * this.zoom);
 
-        // Save context for rotation
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.rotate(planet.rotation * Math.PI / 180);
 
-        // Draw planet based on type
         switch (planet.planetType) {
             case 'asteroid':
                 this.drawSmallAsteroid(planet, radius);
@@ -648,11 +599,9 @@ class GalaxyManager {
     }
 
     drawSmallAsteroid(planet, radius) {
-        // Draw irregular asteroid shape
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Add rough surface texture
         this.ctx.fillStyle = planet.secondaryColor;
         for (let i = 0; i < 3; i++) {
             const tx = (Math.random() - 0.5) * radius;
@@ -660,47 +609,38 @@ class GalaxyManager {
             this.ctx.fillRect(tx, ty, 1, 1);
         }
 
-        // Add impact craters
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius / 3, radius / 4, 1, 1);
         this.ctx.fillRect(radius / 4, -radius / 3, 1, 1);
     }
 
     drawRockyPlanet(planet, radius) {
-        // Draw rocky planet base
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Add volcanic surface patterns
         this.ctx.fillStyle = planet.secondaryColor;
         this.drawVolcanicPattern(planet, radius);
 
-        // Add mountain ranges
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius / 2, -radius / 3, radius, 1);
         this.ctx.fillRect(-radius / 3, radius / 3, radius * 2 / 3, 1);
 
-        // Add polar caps
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(-radius / 3, -radius, radius * 2 / 3, 2);
         this.ctx.fillRect(-radius / 3, radius - 2, radius * 2 / 3, 2);
     }
 
     drawEarthPlanet(planet, radius) {
-        // Draw Earth-like planet base
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Add continent patterns
         this.ctx.fillStyle = planet.secondaryColor;
         this.drawContinents(planet, radius);
 
-        // Add cloud bands
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(-radius / 2, -radius / 4, radius, 1);
         this.ctx.fillRect(-radius / 3, radius / 4, radius * 2 / 3, 1);
 
-        // Add city lights (tiny dots)
         this.ctx.fillStyle = '#FFFF00';
         for (let i = 0; i < 2; i++) {
             const lx = (Math.random() - 0.5) * radius;
@@ -710,59 +650,47 @@ class GalaxyManager {
     }
 
     drawGasGiant(planet, radius) {
-        // Draw gas giant base
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Add horizontal bands
         this.ctx.fillStyle = planet.secondaryColor;
         this.drawHorizontalBands(planet, radius);
 
-        // Add storm vortex
         this.ctx.fillStyle = planet.accentColor;
         this.drawStormVortex(planet, radius);
 
-        // Add ring system
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius - 1, -1, radius * 2 + 2, 1);
         this.ctx.fillRect(-radius - 2, 0, radius * 2 + 4, 1);
 
-        // Add great red spot
         this.ctx.fillStyle = '#FF4500';
         this.ctx.fillRect(-radius / 2, 0, radius / 3, radius / 4);
     }
 
     drawIcePlanet(planet, radius) {
-        // Draw ice planet base
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Add ice crystal patterns
         this.ctx.fillStyle = planet.secondaryColor;
         this.drawIceCrystals(planet, radius);
 
-        // Add crack patterns
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius / 2, 0, radius, 1);
         this.ctx.fillRect(0, -radius / 2, 1, radius);
 
-        // Add geysers
         this.ctx.fillStyle = '#87CEEB';
         this.ctx.fillRect(-1, -radius / 2, 1, radius / 4);
         this.ctx.fillRect(1, -radius / 3, 1, radius / 5);
 
-        // Add ice rings
         this.ctx.fillStyle = '#B0E0E6';
         this.ctx.fillRect(-radius - 2, -1, radius * 2 + 4, 1);
         this.ctx.fillRect(-radius - 1, 0, radius * 2 + 2, 1);
     }
 
     drawDefaultPlanet(planet, radius) {
-        // Fallback planet rendering
         this.ctx.fillStyle = planet.primaryColor;
         this.drawPixelCircle(0, 0, radius, planet.primaryColor);
 
-        // Simple pattern
         this.ctx.fillStyle = planet.secondaryColor;
         this.ctx.fillRect(-radius / 3, -radius / 3, radius * 2 / 3, 1);
         this.ctx.fillRect(-radius / 3, radius / 3, radius * 2 / 3, 1);
@@ -771,16 +699,15 @@ class GalaxyManager {
     drawPixelCircle(cx, cy, radius, color) {
         this.ctx.fillStyle = color;
 
-        // Pixel art circle using predefined patterns
         const patterns = {
-            1: [[0, 0]], // 1x1 dot
-            2: [[0, 0], [1, 0], [0, 1], [1, 1]], // 2x2 square
-            3: [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]], // 3x3 circle
-            4: [[1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [3, 2], [1, 3], [2, 3]], // 4x4 circle
-            5: [[1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [1, 4], [2, 4], [3, 4]], // 5x5 circle
-            6: [[2, 0], [3, 0], [1, 1], [2, 1], [3, 1], [4, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [1, 4], [2, 4], [3, 4], [4, 4], [2, 5], [3, 5]], // 6x6 circle
-            7: [[2, 0], [3, 0], [4, 0], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [2, 6], [3, 6], [4, 6]], // 7x7 circle
-            8: [[3, 0], [4, 0], [2, 1], [3, 1], [4, 1], [5, 1], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [2, 6], [3, 6], [4, 6], [5, 6], [3, 7], [4, 7]] // 8x8 circle
+            1: [[0, 0]],
+            2: [[0, 0], [1, 0], [0, 1], [1, 1]],
+            3: [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]],
+            4: [[1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [3, 2], [1, 3], [2, 3]],
+            5: [[1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [1, 4], [2, 4], [3, 4]],
+            6: [[2, 0], [3, 0], [1, 1], [2, 1], [3, 1], [4, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [1, 4], [2, 4], [3, 4], [4, 4], [2, 5], [3, 5]],
+            7: [[2, 0], [3, 0], [4, 0], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [2, 6], [3, 6], [4, 6]],
+            8: [[3, 0], [4, 0], [2, 1], [3, 1], [4, 1], [5, 1], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [2, 6], [3, 6], [4, 6], [5, 6], [3, 7], [4, 7]]
         };
 
         const pattern = patterns[radius] || this.generateCirclePattern(radius);
@@ -790,7 +717,6 @@ class GalaxyManager {
     }
 
     generateCirclePattern(radius) {
-        // Generate circle pattern for larger sizes
         const pattern = [];
         const center = radius;
 
@@ -850,7 +776,6 @@ class GalaxyManager {
                 this.drawCrackPatterns(planet, radius);
                 break;
             default:
-                // Default pattern
                 this.drawDefaultPattern(planet, radius);
         }
     }
@@ -860,61 +785,56 @@ class GalaxyManager {
 
         switch (feature) {
             case 'great_red_spot':
-                const spotSize = Math.floor(radius / 1.2); // Scaled 2x: much larger spot
+                const spotSize = Math.floor(radius / 1.2);
                 this.ctx.fillRect(-radius / 2, 0, spotSize, spotSize * 0.75);
                 break;
             case 'polar_caps':
                 this.ctx.fillStyle = '#FFFFFF';
-                const capHeight = Math.floor(radius / 1.5); // Scaled 2x: much larger caps
+                const capHeight = Math.floor(radius / 1.5);
                 this.ctx.fillRect(-radius / 2, -radius, radius, capHeight);
                 this.ctx.fillRect(-radius / 2, radius - capHeight, radius, capHeight);
                 break;
             case 'city_lights':
-                // Scaled 2x: many more visible light dots
-                for (let i = 0; i < 20; i++) { // Scaled: many more lights
+                for (let i = 0; i < 20; i++) {
                     const lx = (Math.random() - 0.5) * radius;
                     const ly = (Math.random() - 0.5) * radius;
                     this.ctx.fillStyle = '#FFFF00';
-                    const lightSize = Math.floor(radius / 5) + 4; // Scaled 2x: much larger lights
+                    const lightSize = Math.floor(radius / 5) + 4;
                     this.ctx.fillRect(lx, ly, lightSize, lightSize);
                 }
                 break;
             case 'aurora':
-                // Scaled 2x: much thicker and more visible aurora
                 this.ctx.fillStyle = '#00FF00';
-                const auroraThickness = Math.floor(radius / 3) + 4; // Scaled 2x
-                for (let i = 0; i < 8; i++) { // Scaled: more streaks
+                const auroraThickness = Math.floor(radius / 3) + 4;
+                for (let i = 0; i < 8; i++) {
                     this.ctx.fillRect(-radius / 2 + i * 6, -radius / 2, auroraThickness, radius);
                 }
                 break;
             case 'lightning_storms':
-                // Scaled 2x: much thicker lightning bolts
                 this.ctx.fillStyle = '#FFFFFF';
-                const boltThickness = Math.floor(radius / 4) + 4; // Scaled 2x
+                const boltThickness = Math.floor(radius / 4) + 4;
                 this.ctx.fillRect(radius / 3, -radius / 2, boltThickness, radius);
                 this.ctx.fillRect(radius / 3 + boltThickness, -radius / 3, boltThickness, radius / 2);
-                this.ctx.fillRect(radius / 3 + boltThickness * 2, -radius / 4, boltThickness, radius / 3); // Extra bolt
-                this.ctx.fillRect(radius / 3 + boltThickness * 3, -radius / 5, boltThickness, radius / 4); // Extra bolt
+                this.ctx.fillRect(radius / 3 + boltThickness * 2, -radius / 4, boltThickness, radius / 3);
+                this.ctx.fillRect(radius / 3 + boltThickness * 3, -radius / 5, boltThickness, radius / 4);
                 break;
             case 'ice_rings':
             case 'ring_system':
                 this.ctx.fillStyle = planet.accentColor;
-                const ringThickness = Math.floor(radius / 1.5); // Scaled 2x: much thicker rings
+                const ringThickness = Math.floor(radius / 1.5);
                 this.ctx.fillRect(-radius - 16, -ringThickness, radius * 2 + 32, ringThickness);
                 this.ctx.fillRect(-radius - 24, 0, radius * 2 + 48, ringThickness);
-                this.ctx.fillRect(-radius - 12, ringThickness * 2, radius * 2 + 24, ringThickness / 2); // Extra ring
-                this.ctx.fillRect(-radius - 8, -ringThickness * 2, radius * 2 + 16, ringThickness / 3); // Extra ring
+                this.ctx.fillRect(-radius - 12, ringThickness * 2, radius * 2 + 24, ringThickness / 2);
+                this.ctx.fillRect(-radius - 8, -ringThickness * 2, radius * 2 + 16, ringThickness / 3);
                 break;
             case 'active_volcano':
-                // Scaled 2x: much larger volcanic eruption
                 this.ctx.fillStyle = '#FF4500';
-                const eruptionSize = Math.floor(radius / 2.5) + 4; // Scaled 2x
+                const eruptionSize = Math.floor(radius / 2.5) + 4;
                 this.ctx.fillRect(0, radius / 2, eruptionSize, radius / 3);
-                this.ctx.fillRect(-eruptionSize / 2, radius / 2 - eruptionSize, eruptionSize, eruptionSize); // Base
-                this.ctx.fillRect(-eruptionSize / 4, radius / 2 - eruptionSize * 2, eruptionSize / 2, eruptionSize); // Extra eruption
+                this.ctx.fillRect(-eruptionSize / 2, radius / 2 - eruptionSize, eruptionSize, eruptionSize);
+                this.ctx.fillRect(-eruptionSize / 4, radius / 2 - eruptionSize * 2, eruptionSize / 2, eruptionSize);
                 break;
             case 'geysers':
-                // Draw geyser plumes
                 this.ctx.fillStyle = '#87CEEB';
                 this.ctx.fillRect(-1, -radius / 2, 1, radius / 4);
                 this.ctx.fillRect(1, -radius / 3, 1, radius / 5);
@@ -923,14 +843,12 @@ class GalaxyManager {
     }
 
     applyTextureVariant(planet, radius) {
-        // Apply texture based on variant
         const variant = planet.textureVariant;
 
-        if (variant === 0) return; // No additional texture
+        if (variant === 0) return;
 
         this.ctx.fillStyle = planet.accentColor;
 
-        // Add texture dots based on variant
         for (let i = 0; i < variant; i++) {
             const tx = (Math.random() - 0.5) * radius;
             const ty = (Math.random() - 0.5) * radius;
@@ -940,21 +858,17 @@ class GalaxyManager {
 
     addPlanetGlow(planet, radius) {
         if (radius > 5) {
-            // Scaled 2x: maximum glow for ultimate visibility
             this.ctx.fillStyle = planet.primaryColor + 'A0';
             this.drawPixelCircle(0, 0, radius + 12, planet.primaryColor + 'A0');
 
-            // Scaled 2x: large outer glow
             this.ctx.fillStyle = planet.primaryColor + '70';
             this.drawPixelCircle(0, 0, radius + 20, planet.primaryColor + '70');
 
-            // Scaled 2x: extended outer glow for very large planets
             if (radius > 30) {
                 this.ctx.fillStyle = planet.primaryColor + '50';
                 this.drawPixelCircle(0, 0, radius + 30, planet.primaryColor + '50');
             }
 
-            // Scaled 2x: massive outer glow for huge planets
             if (radius > 60) {
                 this.ctx.fillStyle = planet.primaryColor + '30';
                 this.drawPixelCircle(0, 0, radius + 40, planet.primaryColor + '30');
@@ -962,85 +876,76 @@ class GalaxyManager {
         }
     }
 
-    // Pattern drawing methods
     drawHorizontalBands(planet, radius) {
-        for (let i = -radius + 16; i < radius - 12; i += 20) { // Scaled 2x: wider bands
-            this.ctx.fillRect(-radius + 10, i, radius * 2 - 20, 10); // 10px thick bands (2x)
+        for (let i = -radius + 16; i < radius - 12; i += 20) {
+            this.ctx.fillRect(-radius + 10, i, radius * 2 - 20, 10);
         }
     }
 
     drawCraters(planet, radius) {
-        const craterCount = Math.floor(radius / 2); // Even more craters for very large planets
+        const craterCount = Math.floor(radius / 2);
         for (let i = 0; i < craterCount; i++) {
             const cx = (Math.random() - 0.5) * radius;
             const cy = (Math.random() - 0.5) * radius;
-            const craterSize = Math.floor(radius / 3); // Much larger craters
+            const craterSize = Math.floor(radius / 3);
             this.ctx.fillRect(cx, cy, craterSize, craterSize);
         }
     }
 
     drawContinents(planet, radius) {
-        const continentSize = Math.floor(radius * 0.8); // Scaled: maintain continent proportions
+        const continentSize = Math.floor(radius * 0.8);
         this.ctx.fillRect(-radius / 2, -radius / 3, continentSize, continentSize / 2);
         this.ctx.fillRect(radius / 4, radius / 4, continentSize / 2, continentSize / 3);
-        // Scaled continent details for 2x planets
         this.ctx.fillRect(-radius / 3, radius / 5, continentSize / 3, continentSize / 4);
         this.ctx.fillRect(radius / 6, -radius / 4, continentSize / 4, continentSize / 5);
-        this.ctx.fillRect(-radius / 5, -radius / 6, continentSize / 5, continentSize / 6); // Extra detail
+        this.ctx.fillRect(-radius / 5, -radius / 6, continentSize / 5, continentSize / 6);
     }
 
     drawStormVortex(planet, radius) {
-        // Draw spiral storm pattern - scaled 2x for pixel art
-        for (let i = 0; i < radius; i += 10) { // Scaled 2x: wider spacing
-            const angle = i * 0.1; // Scaled: slower spiral
+        for (let i = 0; i < radius; i += 10) {
+            const angle = i * 0.1;
             const x = Math.cos(angle) * i;
             const y = Math.sin(angle) * i;
-            const stormSize = Math.floor(radius / 3) + 4; // Scaled 2x: larger storm elements
+            const stormSize = Math.floor(radius / 3) + 4;
             this.ctx.fillRect(x, y, stormSize, stormSize);
         }
     }
 
     drawIceCrystals(planet, radius) {
-        // Draw crystal formations - scaled 2x for pixel art
         this.ctx.fillStyle = '#FFFFFF';
-        const crystalSize = Math.floor(radius / 2) + 4; // Scaled 2x: much larger crystals
+        const crystalSize = Math.floor(radius / 2) + 4;
         this.ctx.fillRect(-crystalSize, -radius / 2, crystalSize, crystalSize);
         this.ctx.fillRect(crystalSize, radius / 3, crystalSize, crystalSize);
         this.ctx.fillRect(-radius / 3, 0, crystalSize, crystalSize);
-        this.ctx.fillRect(radius / 4, -radius / 4, crystalSize, crystalSize); // Extra crystal
-        this.ctx.fillRect(-radius / 6, radius / 6, crystalSize, crystalSize); // Extra crystal
+        this.ctx.fillRect(radius / 4, -radius / 4, crystalSize, crystalSize);
+        this.ctx.fillRect(-radius / 6, radius / 6, crystalSize, crystalSize);
     }
 
     drawVolcanic(planet, radius) {
-        // Draw lava flows - scaled 2x for pixel art
         this.ctx.fillStyle = '#FF4500';
-        const lavaThickness = Math.floor(radius / 2.5) + 4; // Scaled 2x: much thicker lava flows
+        const lavaThickness = Math.floor(radius / 2.5) + 4;
         this.ctx.fillRect(-radius / 2, radius / 2, radius, lavaThickness);
         this.ctx.fillRect(radius / 3, radius / 3, radius / 2, lavaThickness);
-        this.ctx.fillRect(-radius / 4, 0, radius / 3, lavaThickness); // Extra lava flow
-        this.ctx.fillRect(radius / 5, -radius / 5, radius / 4, lavaThickness); // Extra lava flow
+        this.ctx.fillRect(-radius / 4, 0, radius / 3, lavaThickness);
+        this.ctx.fillRect(radius / 5, -radius / 5, radius / 4, lavaThickness);
     }
 
     drawVolcanicPattern(planet, radius) {
-        // Draw volcanic surface patterns
         this.ctx.fillStyle = '#FF4500';
         this.ctx.fillRect(-radius / 2, radius / 2, radius, 1);
         this.ctx.fillRect(radius / 3, radius / 3, radius / 2, 1);
 
-        // Add volcanic vents
         this.ctx.fillStyle = '#FF6600';
         this.ctx.fillRect(0, radius / 2, 2, radius / 3);
     }
 
     drawRings(planet, radius) {
-        // Draw ring system
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius - 1, -1, radius * 2 + 2, 1);
         this.ctx.fillRect(-radius - 2, 0, radius * 2 + 4, 1);
     }
 
     drawRoughSurface(planet, radius) {
-        // Draw rough, irregular surface
         for (let i = 0; i < 3; i++) {
             const x = (Math.random() - 0.5) * radius;
             const y = (Math.random() - 0.5) * radius;
@@ -1049,21 +954,18 @@ class GalaxyManager {
     }
 
     drawDustStorms(planet, radius) {
-        // Draw dust cloud patterns
         this.ctx.fillStyle = planet.accentColor;
         this.ctx.fillRect(-radius / 2, -radius / 2, radius, 1);
         this.ctx.fillRect(-radius / 3, radius / 3, radius * 2 / 3, 1);
     }
 
     drawCloudBands(planet, radius) {
-        // Draw cloud formations
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(-radius / 2, -radius / 4, radius, 1);
         this.ctx.fillRect(-radius / 3, radius / 4, radius * 2 / 3, 1);
     }
 
     drawSwirlPatterns(planet, radius) {
-        // Draw atmospheric swirls
         for (let i = 0; i < radius / 2; i += 2) {
             const angle = i * 0.3;
             const x = Math.cos(angle) * i;
@@ -1073,20 +975,17 @@ class GalaxyManager {
     }
 
     drawCrackPatterns(planet, radius) {
-        // Draw ice crack patterns
         this.ctx.fillStyle = '#B0E0E6';
         this.ctx.fillRect(-radius / 2, 0, radius, 1);
         this.ctx.fillRect(0, -radius / 2, 1, radius);
     }
 
     drawDefaultPattern(planet, radius) {
-        // Simple default pattern
         this.ctx.fillRect(-radius / 3, -radius / 3, radius * 2 / 3, 1);
         this.ctx.fillRect(-radius / 3, radius / 3, radius * 2 / 3, 1);
     }
 
     drawBackgroundStars() {
-        // Draw small background stars
         for (let i = 0; i < 20; i++) {
             const x = (i * 15) % this.canvas.width;
             const y = (i * 23) % this.canvas.height;
@@ -1094,7 +993,6 @@ class GalaxyManager {
             this.ctx.fillStyle = '#ffffff';
             this.ctx.fillRect(x, y, 1, 1);
 
-            // Occasional twinkle
             if (Math.random() < 0.1) {
                 this.ctx.fillStyle = '#ffffff';
                 this.ctx.fillRect(x + 1, y, 1, 1);
@@ -1103,7 +1001,6 @@ class GalaxyManager {
     }
 
     generateBackgroundElements() {
-        // Add random asteroids with more variety
         for (let i = 0; i < 8; i++) {
             this.backgroundElements.push({
                 type: 'asteroid',
@@ -1118,7 +1015,6 @@ class GalaxyManager {
             });
         }
 
-        // Add occasional comets with different trajectories
         if (Math.random() < 0.4) {
             this.backgroundElements.push({
                 type: 'comet',
@@ -1132,7 +1028,6 @@ class GalaxyManager {
             });
         }
 
-        // Add nebula clouds with more variety
         for (let i = 0; i < 4; i++) {
             this.backgroundElements.push({
                 type: 'nebula',
@@ -1146,7 +1041,6 @@ class GalaxyManager {
             });
         }
 
-        // Add occasional meteor showers
         if (Math.random() < 0.3) {
             for (let i = 0; i < 5; i++) {
                 this.backgroundElements.push({
@@ -1162,7 +1056,6 @@ class GalaxyManager {
             }
         }
 
-        // Add space dust particles
         for (let i = 0; i < 15; i++) {
             this.backgroundElements.push({
                 type: 'dust',
@@ -1227,7 +1120,6 @@ class GalaxyManager {
     drawDriftingAsteroid(asteroid) {
         this.ctx.fillStyle = asteroid.color;
 
-        // Draw asteroid based on shape
         switch (asteroid.shape) {
             case 'irregular':
                 this.ctx.fillRect(asteroid.x, asteroid.y, asteroid.size, asteroid.size);
@@ -1248,11 +1140,9 @@ class GalaxyManager {
                 this.ctx.fillRect(asteroid.x, asteroid.y, asteroid.size, asteroid.size);
         }
 
-        // Move asteroid
         asteroid.x += Math.cos(asteroid.angle) * asteroid.speed;
         asteroid.y += Math.sin(asteroid.angle) * asteroid.speed;
 
-        // Wrap around screen
         if (asteroid.x > 400) asteroid.x = 0;
         if (asteroid.y > 280) asteroid.y = 0;
         if (asteroid.x < 0) asteroid.x = 400;
@@ -1260,21 +1150,17 @@ class GalaxyManager {
     }
 
     drawMeteor(meteor) {
-        // Draw meteor head
         this.ctx.fillStyle = meteor.color;
         this.ctx.fillRect(meteor.x, meteor.y, meteor.size, meteor.size);
 
-        // Draw trail
         this.ctx.fillStyle = '#FF6600';
         for (let i = 1; i <= meteor.trail; i++) {
             this.ctx.fillRect(meteor.x - i, meteor.y, 1, 1);
         }
 
-        // Move meteor
         meteor.x += Math.cos(meteor.angle) * meteor.speed;
         meteor.y += Math.sin(meteor.angle) * meteor.speed;
 
-        // Remove if off screen
         if (meteor.x > 300 || meteor.y > 200) {
             const index = this.backgroundElements.indexOf(meteor);
             if (index > -1) {
@@ -1284,7 +1170,6 @@ class GalaxyManager {
     }
 
     drawDustParticle(dust) {
-        // Twinkling effect
         dust.opacity += dust.twinkle;
         if (dust.opacity > 0.4) dust.twinkle = -Math.abs(dust.twinkle);
         if (dust.opacity < 0.1) dust.twinkle = Math.abs(dust.twinkle);
@@ -1292,11 +1177,9 @@ class GalaxyManager {
         this.ctx.fillStyle = `rgba(255, 255, 255, ${dust.opacity})`;
         this.ctx.fillRect(dust.x, dust.y, dust.size, dust.size);
 
-        // Move dust particle
         dust.x += Math.cos(dust.angle) * dust.speed;
         dust.y += Math.sin(dust.angle) * dust.speed;
 
-        // Wrap around screen
         if (dust.x > 300) dust.x = 0;
         if (dust.y > 200) dust.y = 0;
         if (dust.x < 0) dust.x = 300;
@@ -1304,11 +1187,9 @@ class GalaxyManager {
     }
 
     drawComet(comet) {
-        // Draw comet head
         this.ctx.fillStyle = comet.color;
         this.ctx.fillRect(comet.x, comet.y, comet.size, comet.size);
 
-        // Draw tail with gradient effect
         this.ctx.fillStyle = '#87CEEB';
         for (let i = 1; i <= comet.tailLength; i++) {
             const opacity = 1 - (i / comet.tailLength);
@@ -1316,11 +1197,9 @@ class GalaxyManager {
             this.ctx.fillRect(comet.x - i, comet.y, 1, 1);
         }
 
-        // Move comet
         comet.x += Math.cos(comet.trajectory) * comet.speed;
         comet.y += Math.sin(comet.trajectory) * comet.speed;
 
-        // Remove if off screen
         if (comet.x > 400) {
             const index = this.backgroundElements.indexOf(comet);
             if (index > -1) {
@@ -1330,7 +1209,6 @@ class GalaxyManager {
     }
 
     drawNebula(nebula) {
-        // Draw nebula based on shape
         switch (nebula.shape) {
             case 'circular':
                 this.drawCircularNebula(nebula);
@@ -1348,7 +1226,6 @@ class GalaxyManager {
                 this.drawCircularNebula(nebula);
         }
 
-        // Drift nebula slowly
         nebula.x += nebula.driftSpeed;
         if (nebula.x > 300) nebula.x = -nebula.radius;
     }
@@ -1356,7 +1233,6 @@ class GalaxyManager {
     drawCircularNebula(nebula) {
         this.ctx.fillStyle = nebula.color + Math.floor(nebula.opacity * 255).toString(16).padStart(2, '0');
 
-        // Draw nebula as semi-transparent circles
         for (let i = 0; i < 3; i++) {
             const offsetX = (Math.random() - 0.5) * 10;
             const offsetY = (Math.random() - 0.5) * 10;
@@ -1367,7 +1243,6 @@ class GalaxyManager {
     drawElongatedNebula(nebula) {
         this.ctx.fillStyle = nebula.color + Math.floor(nebula.opacity * 255).toString(16).padStart(2, '0');
 
-        // Draw elongated shape
         this.ctx.fillRect(nebula.x, nebula.y, nebula.radius, nebula.radius / 2);
         this.ctx.fillRect(nebula.x + nebula.radius / 2, nebula.y + nebula.radius / 4, nebula.radius / 2, nebula.radius / 4);
     }
@@ -1375,7 +1250,6 @@ class GalaxyManager {
     drawIrregularNebula(nebula) {
         this.ctx.fillStyle = nebula.color + Math.floor(nebula.opacity * 255).toString(16).padStart(2, '0');
 
-        // Draw irregular shape
         this.ctx.fillRect(nebula.x, nebula.y, nebula.radius / 2, nebula.radius);
         this.ctx.fillRect(nebula.x + nebula.radius / 2, nebula.y, nebula.radius / 2, nebula.radius / 2);
         this.ctx.fillRect(nebula.x, nebula.y + nebula.radius / 2, nebula.radius / 3, nebula.radius / 2);
@@ -1384,7 +1258,6 @@ class GalaxyManager {
     drawSpiralNebula(nebula) {
         this.ctx.fillStyle = nebula.color + Math.floor(nebula.opacity * 255).toString(16).padStart(2, '0');
 
-        // Draw spiral pattern
         for (let i = 0; i < 4; i++) {
             const angle = i * Math.PI / 2;
             const x = nebula.x + Math.cos(angle) * nebula.radius / 3;
@@ -1394,21 +1267,17 @@ class GalaxyManager {
     }
 
     updateStarOrbit(planet) {
-        // Update planet's orbital position
         if (planet.orbitRadius && planet.orbitSpeed && planet.orbitAngle !== undefined) {
-            // Increment the orbital angle
             planet.orbitAngle += planet.orbitSpeed;
 
-            // Calculate new position based on orbit
             const centerX = this.galaxyCenter.x;
             const centerY = this.galaxyCenter.y;
 
             planet.x = centerX + Math.cos(planet.orbitAngle) * planet.orbitRadius;
             planet.y = centerY + Math.sin(planet.orbitAngle) * planet.orbitRadius;
 
-            // Update rotation for visual effect
             if (planet.rotation !== undefined) {
-                planet.rotation += 0.5; // Slow rotation
+                planet.rotation += 0.5;
                 if (planet.rotation >= 360) planet.rotation -= 360;
             }
         }
@@ -1418,17 +1287,14 @@ class GalaxyManager {
         const centerX = Math.floor(this.galaxyCenter.x);
         const centerY = Math.floor(this.galaxyCenter.y);
 
-        // Draw galaxy center as a bright pixel
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(centerX - 1, centerY - 1, 3, 3);
 
-        // Add glow
         this.ctx.fillStyle = '#ffffff80';
         this.ctx.fillRect(centerX - 2, centerY - 2, 5, 5);
     }
 
     showStarCreationEffect(star) {
-        // Simple pixel art celebration effect
         if (starCount) {
             starCount.style.transform = 'scale(1.2)';
             starCount.style.textShadow = '0 0 20px #00ffff';
@@ -1523,14 +1389,12 @@ class GalaxyManager {
     }
 }
 
-// Initialize galaxy system
 async function initGalaxy() {
     try {
         galaxyManager = new GalaxyManager();
         await galaxyManager.init();
         console.log('Galaxy system initialized');
 
-        // Ensure event listeners are set up
         setTimeout(() => {
             if (galaxyManager) {
                 galaxyManager.setupEventListeners();
@@ -1541,14 +1405,12 @@ async function initGalaxy() {
     }
 }
 
-// Update galaxy display
 function updateGalaxy() {
     if (galaxyManager) {
         galaxyManager.updateGalaxyStats();
     }
 }
 
-// Manual setup for galaxy controls (fallback)
 function setupGalaxyControls() {
     console.log('Setting up galaxy controls manually...');
 
@@ -1579,7 +1441,6 @@ function setupGalaxyControls() {
     }
 }
 
-// Test function to verify planet rendering with different session durations
 function testPlanetRenderingWithDurations() {
     console.log('=== PLANET RENDERING DURATION TEST ===');
 
@@ -1588,8 +1449,7 @@ function testPlanetRenderingWithDurations() {
         return;
     }
 
-    // Test different session durations
-    const testDurations = [10, 20, 30, 40, 50]; // minutes
+    const testDurations = [10, 20, 30, 40, 50];
     const testResults = [];
 
     testDurations.forEach(duration => {
@@ -1598,7 +1458,6 @@ function testPlanetRenderingWithDurations() {
         const planetType = galaxyManager.getPlanetType(duration);
         console.log(`  Duration: ${duration} min -> Planet Type: ${planetType}`);
 
-        // Generate test planet
         const testPlanet = galaxyManager.generateUniquePlanet(planetType);
         testResults.push({
             duration: duration,
@@ -1616,7 +1475,6 @@ function testPlanetRenderingWithDurations() {
         });
     });
 
-    // Verify planet type mapping
     console.log('\nPlanet Type Mapping Verification:');
     console.log('Asteroid (<15 min):', testResults.filter(r => r.planetType === 'asteroid').length);
     console.log('Rocky (15-24 min):', testResults.filter(r => r.planetType === 'rocky').length);
@@ -1624,11 +1482,10 @@ function testPlanetRenderingWithDurations() {
     console.log('Gas (35-44 min):', testResults.filter(r => r.planetType === 'gas').length);
     console.log('Ice (45+ min):', testResults.filter(r => r.planetType === 'ice').length);
 
-    // Test circular shape rendering
     console.log('\nCircular Shape Test:');
     testResults.forEach(result => {
         console.log(`${result.planetType} planet (${result.duration} min):`, {
-            hasCircularBase: true, // All planets use drawPixelCircle
+            hasCircularBase: true,
             hasUniquePattern: !!result.planet.pattern,
             hasFeatures: result.planet.features.length > 0,
             hasTexture: result.planet.textureVariant >= 0
@@ -1640,8 +1497,6 @@ function testPlanetRenderingWithDurations() {
     return testResults;
 }
 
-
-// Load focus session
 async function loadFocusSession() {
     try {
         const result = await chrome.storage.local.get(['focusSession']);
@@ -1653,12 +1508,10 @@ async function loadFocusSession() {
             if (pauseTimer) pauseTimer.disabled = false;
             if (timerMode) timerMode.textContent = 'FOCUS';
 
-            // Start timer interval
             if (!focusTimerInterval) {
                 focusTimerInterval = setInterval(updateFocusTimer, 1000);
             }
         } else if (focusSessionData && focusSessionData.pausedTime !== undefined) {
-            // Session is paused
             if (startTimer) startTimer.disabled = false;
             if (pauseTimer) {
                 pauseTimer.disabled = false;
@@ -1666,14 +1519,12 @@ async function loadFocusSession() {
             }
             if (timerMode) timerMode.textContent = 'PAUSED';
 
-            // Update timer display with paused time
             if (focusTimer && focusSessionData.pausedTime > 0) {
                 const minutes = Math.floor(focusSessionData.pausedTime / 60000);
                 const seconds = Math.floor((focusSessionData.pausedTime % 60000) / 1000);
                 focusTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
         } else {
-            // No active session
             if (focusTimer) focusTimer.textContent = '00:00';
             if (startTimer) startTimer.disabled = false;
             if (pauseTimer) {
@@ -1687,7 +1538,6 @@ async function loadFocusSession() {
     }
 }
 
-// Update focus timer display
 function updateFocusTimer() {
     if (focusSessionData && focusSessionData.active) {
         const now = Date.now();
@@ -1706,7 +1556,6 @@ function updateFocusTimer() {
     }
 }
 
-// Load recent sites
 async function loadRecentSites() {
     try {
         if (!recentSitesList) {
@@ -1723,7 +1572,6 @@ async function loadRecentSites() {
             websiteStats = {};
         }
 
-        // Get time limits and daily usage for all domains
         let timeLimits = {};
         let dailyUsage = {};
 
@@ -1743,20 +1591,17 @@ async function loadRecentSites() {
             dailyUsage = {};
         }
 
-        // Ensure websiteStats is an object
         if (!websiteStats || typeof websiteStats !== 'object') {
             console.log('No website stats found, showing no sites message');
             recentSitesList.innerHTML = '<div class="no-sites">No recent sites</div>';
             return;
         }
 
-        // Ensure timeLimits and dailyUsage are objects
         const safeTimeLimits = timeLimits && typeof timeLimits === 'object' ? timeLimits : {};
         const safeDailyUsage = dailyUsage && typeof dailyUsage === 'object' ? dailyUsage : {};
 
         console.log('Website stats keys:', Object.keys(websiteStats));
 
-        // Sort by last visit time
         const allSites = Object.entries(websiteStats)
             .map(([domain, stats]) => ({
                 domain,
@@ -1787,11 +1632,9 @@ async function loadRecentSites() {
             const siteItem = document.createElement('div');
             siteItem.className = 'site-item';
 
-            // Format time display
             const totalMinutes = Math.round(site.timeSpent / 60000);
             const timeDisplay = totalMinutes > 0 ? `${totalMinutes}m` : '0m';
 
-            // Check if site has time limit
             const hasTimeLimit = site.timeLimit && site.timeLimit > 0;
             let timeLimitDisplay = '';
             let progressBar = '';
@@ -1826,7 +1669,6 @@ async function loadRecentSites() {
                 </div>
             `;
 
-            // Add event listeners
             const blockBtn = siteItem.querySelector('.block-btn');
             const editLimitBtn = siteItem.querySelector('.edit-limit-btn');
             const setLimitBtn = siteItem.querySelector('.set-limit-btn');
@@ -1856,7 +1698,6 @@ async function loadRecentSites() {
     }
 }
 
-// Load blocked sites count with retry mechanism
 async function loadBlockedSites(retryCount = 0) {
     try {
         console.log(`Loading blocked sites count... (attempt ${retryCount + 1})`);
@@ -1866,10 +1707,8 @@ async function loadBlockedSites(retryCount = 0) {
             return;
         }
 
-        // Try to get blocked sites from background script
         let blockedSites = null;
         try {
-            // Add timeout to prevent hanging
             const messagePromise = chrome.runtime.sendMessage({ action: 'getBlockedSites' });
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Message timeout')), 2000)
@@ -1880,14 +1719,12 @@ async function loadBlockedSites(retryCount = 0) {
         } catch (messageError) {
             console.error('Error getting blocked sites from background:', messageError);
 
-            // Retry once if this is the first attempt
             if (retryCount === 0) {
                 console.log('Retrying blocked sites load...');
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return loadBlockedSites(1);
             }
 
-            // Fallback: try to get directly from storage
             try {
                 const result = await chrome.storage.sync.get(['blockedSites']);
                 blockedSites = result.blockedSites || [];
@@ -1898,17 +1735,15 @@ async function loadBlockedSites(retryCount = 0) {
             }
         }
 
-        // Ensure blockedSites is an array
         const sitesArray = Array.isArray(blockedSites) ? blockedSites : [];
         const count = sitesArray.length;
 
         blockedCount.textContent = `${count} sites blocked`;
         console.log(`Set blocked sites count: ${count}`);
 
-        // Update the display immediately
         if (blockedCount) {
             blockedCount.style.opacity = '1';
-            blockedCount.style.color = ''; // Reset color
+            blockedCount.style.color = '';
         }
     } catch (error) {
         console.error('Error loading blocked sites:', error);
@@ -1919,7 +1754,6 @@ async function loadBlockedSites(retryCount = 0) {
     }
 }
 
-// Load daily challenge
 async function loadDailyChallenge() {
     try {
         const result = await chrome.storage.local.get(['dailyChallenge']);
@@ -1933,7 +1767,6 @@ async function loadDailyChallenge() {
     }
 }
 
-// Update daily challenge display
 function updateDailyChallengeDisplay() {
     challengeText.textContent = `Block ${dailyChallenge.target} distracting sites today`;
     challengeProgress.style.width = `${(dailyChallenge.progress / dailyChallenge.target) * 100}%`;
@@ -1941,14 +1774,12 @@ function updateDailyChallengeDisplay() {
     challengeReward.textContent = `Reward: +${dailyChallenge.reward} XP`;
 }
 
-// Update user display
 function updateUserDisplay() {
     levelBadge.textContent = `LVL ${userStats.level}`;
     levelValue.textContent = userStats.level;
     streakValue.textContent = `${userStats.streak} days`;
     xpValue.textContent = userStats.xp;
 
-    // Calculate XP bar
     const xpForNextLevel = userStats.level * 100;
     const xpProgress = (userStats.xp % 100);
     const xpPercentage = (xpProgress / 100) * 100;
@@ -1957,11 +1788,9 @@ function updateUserDisplay() {
     xpText.textContent = `${xpProgress}/100 XP`;
 }
 
-// Set up event listeners
 function setupEventListeners() {
     console.log('Setting up event listeners...');
 
-    // Theme toggle
     if (themeToggle) {
         console.log('Adding theme toggle listener');
         themeToggle.addEventListener('click', toggleTheme);
@@ -1969,7 +1798,6 @@ function setupEventListeners() {
         console.log('Theme toggle button not found');
     }
 
-    // Timer controls
     if (startTimer) {
         console.log('Adding start timer listener');
         startTimer.addEventListener('click', startFocusTimer);
@@ -1991,7 +1819,6 @@ function setupEventListeners() {
         console.log('Reset timer button not found');
     }
 
-    // Site blocking
     if (addSiteBtn) {
         console.log('Adding add site button listener');
         addSiteBtn.addEventListener('click', openAddSiteDialog);
@@ -1999,7 +1826,6 @@ function setupEventListeners() {
         console.log('Add site button not found');
     }
 
-    // Footer buttons
     if (optionsBtn) {
         console.log('Adding options button listener');
         optionsBtn.addEventListener('click', openOptions);
@@ -2017,7 +1843,6 @@ function setupEventListeners() {
     console.log('Event listeners setup complete');
 }
 
-// Toggle theme
 async function toggleTheme() {
     console.log('Theme toggle clicked, current theme:', currentTheme);
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -2033,13 +1858,10 @@ async function toggleTheme() {
     }
 }
 
-// Apply Text Size
 function applyTextSize(size = 'medium') {
-    // Remove any existing text size classes
     document.body.className = document.body.className
         .replace(/text-(small|medium|large|extra-large)/g, '');
 
-    // Add the new text size class
     document.body.classList.add(`text-${size}`);
 
     console.log('Text size applied:', size);
@@ -2047,7 +1869,6 @@ function applyTextSize(size = 'medium') {
     console.log('Body font-size:', window.getComputedStyle(document.body).fontSize);
 }
 
-// Apply theme
 function applyTheme() {
     const body = document.body;
 
@@ -2066,24 +1887,19 @@ function applyTheme() {
     }
 }
 
-// Show notification in popup
 function showPopupNotification(message, type = 'info', duration = 2000) {
-    // Check if notifications are enabled
     chrome.storage.sync.get(['notificationsEnabled']).then(settings => {
         if (settings.notificationsEnabled === false) {
             console.log('Notifications disabled, skipping:', message);
             return;
         }
 
-        // Remove any existing notifications
         const existingNotifications = document.querySelectorAll('.popup-notification');
         existingNotifications.forEach(notif => notif.remove());
 
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `popup-notification notification-${type}`;
 
-        // Create notification content
         const icon = getPopupNotificationIcon(type);
         notification.innerHTML = `
             <div class="notification-content">
@@ -2092,7 +1908,6 @@ function showPopupNotification(message, type = 'info', duration = 2000) {
             </div>
         `;
 
-        // Style the notification
         Object.assign(notification.style, {
             position: 'fixed',
             top: '10px',
@@ -2112,7 +1927,6 @@ function showPopupNotification(message, type = 'info', duration = 2000) {
             transition: 'transform 0.3s ease-in-out'
         });
 
-        // Style notification content
         const content = notification.querySelector('.notification-content');
         Object.assign(content.style, {
             display: 'flex',
@@ -2122,12 +1936,10 @@ function showPopupNotification(message, type = 'info', duration = 2000) {
 
         document.body.appendChild(notification);
 
-        // Animate in
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 10);
 
-        // Remove after duration
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -2183,20 +1995,16 @@ function getPopupNotificationTextColor(type, isDarkMode = true) {
     }
 }
 
-// Focus timer functions
 async function startFocusTimer() {
     try {
-        // First, refresh focusSessionData from storage to get latest state
         const result = await chrome.storage.local.get(['focusSession']);
         focusSessionData = result.focusSession;
 
-        // Check if there's a paused session first
         if (focusSessionData && focusSessionData.pausedTime !== undefined) {
             await resumeFocusTimer();
             return;
         }
 
-        // Otherwise, start new timer with full duration
         const settings = await chrome.storage.sync.get(['focusSessionDuration']);
         const duration = settings.focusSessionDuration || 25;
 
@@ -2222,7 +2030,6 @@ async function startFocusTimer() {
         if (pauseTimer) pauseTimer.disabled = false;
         if (timerMode) timerMode.textContent = 'FOCUS';
 
-        // Start timer interval
         focusTimerInterval = setInterval(updateFocusTimer, 1000);
 
         chrome.runtime.sendMessage({ action: 'startFocusSession' });
@@ -2247,7 +2054,6 @@ async function pauseFocusTimer() {
                 }
             });
 
-            // Update local state
             focusSessionData.active = false;
             focusSessionData.pausedTime = timeLeft;
 
@@ -2267,7 +2073,6 @@ async function pauseFocusTimer() {
             showPopupNotification('⏸️ Focus session paused', 'info', 2000);
             console.log('Focus timer paused');
         } else if (focusSessionData && focusSessionData.pausedTime !== undefined) {
-            // Resume the session
             await resumeFocusTimer();
         }
     } catch (error) {
@@ -2290,7 +2095,6 @@ async function resumeFocusTimer() {
                 }
             });
 
-            // Update local state
             focusSessionData.active = true;
             focusSessionData.endTime = newEndTime;
             focusSessionData.pausedTime = undefined;
@@ -2302,7 +2106,6 @@ async function resumeFocusTimer() {
             }
             if (timerMode) timerMode.textContent = 'FOCUS';
 
-            // Start timer interval
             focusTimerInterval = setInterval(updateFocusTimer, 1000);
 
             chrome.runtime.sendMessage({ action: 'startFocusSession', isResume: true });
@@ -2338,7 +2141,6 @@ async function resetFocusTimer() {
 
 async function endFocusSession() {
     try {
-        // Capture session data BEFORE clearing it
         const sessionDuration = focusSessionData ? focusSessionData.duration / 60000 : 25;
 
         await chrome.storage.local.remove(['focusSession']);
@@ -2354,10 +2156,8 @@ async function endFocusSession() {
             focusTimerInterval = null;
         }
 
-        // Award XP for completing focus session
         await awardXP(25);
 
-        // Generate new star in galaxy with correct duration
         if (galaxyManager) {
             const sessionQuality = calculateSessionQuality();
             galaxyManager.generateNewStar(sessionDuration, sessionQuality);
@@ -2369,10 +2169,7 @@ async function endFocusSession() {
     }
 }
 
-// Calculate session quality based on focus behavior
 function calculateSessionQuality() {
-    // This is a simplified quality calculation
-    // In a real implementation, you'd track tab switches, site categories, etc.
     const random = Math.random();
     if (random > 0.8) return 'excellent';
     if (random > 0.6) return 'good';
@@ -2380,7 +2177,6 @@ function calculateSessionQuality() {
     return 'poor';
 }
 
-// Block site function
 async function blockSite(domain) {
     try {
         console.log(`Attempting to block site: ${domain}`);
@@ -2393,16 +2189,12 @@ async function blockSite(domain) {
         if (response && response.success) {
             console.log(`Successfully blocked site: ${domain}`);
 
-            // Show success notification
             showPopupNotification(`✅ Blocked ${domain}`, 'success', 2000);
 
-            // Update blocked sites count immediately
             await loadBlockedSites();
 
-            // Update daily challenge progress
             await updateDailyChallengeProgress();
 
-            // Reload recent sites to remove blocked site
             await loadRecentSites();
         } else {
             console.error('Failed to block site:', response);
@@ -2414,7 +2206,6 @@ async function blockSite(domain) {
     }
 }
 
-// Update daily challenge progress
 async function updateDailyChallengeProgress() {
     try {
         if (dailyChallenge.type === 'block_sites') {
@@ -2423,7 +2214,6 @@ async function updateDailyChallengeProgress() {
             await chrome.storage.local.set({ dailyChallenge });
             updateDailyChallengeDisplay();
 
-            // Check if challenge is completed
             if (dailyChallenge.progress >= dailyChallenge.target) {
                 await awardXP(dailyChallenge.reward);
                 await generateNewDailyChallenge();
@@ -2434,17 +2224,14 @@ async function updateDailyChallengeProgress() {
     }
 }
 
-// Award XP
 async function awardXP(amount) {
     try {
         userStats.xp += amount;
         userStats.totalXP += amount;
 
-        // Check for level up
         const newLevel = Math.floor(userStats.totalXP / 100) + 1;
         if (newLevel > userStats.level) {
             userStats.level = newLevel;
-            // Level up animation could be added here
         }
 
         await chrome.storage.local.set({ userStats });
@@ -2456,7 +2243,6 @@ async function awardXP(amount) {
     }
 }
 
-// Generate new daily challenge
 async function generateNewDailyChallenge() {
     try {
         const challenges = [
@@ -2478,7 +2264,6 @@ async function generateNewDailyChallenge() {
     }
 }
 
-// Open add site dialog
 function openAddSiteDialog() {
     const domain = prompt('Enter domain to block (e.g., facebook.com):');
     if (domain && domain.trim()) {
@@ -2486,7 +2271,6 @@ function openAddSiteDialog() {
     }
 }
 
-// Time limit management functions
 async function setTimeLimit(domain) {
     const minutes = prompt(`Set daily time limit for ${domain} (in minutes, 5-480):`);
     if (minutes && !isNaN(minutes)) {
@@ -2503,7 +2287,7 @@ async function setTimeLimit(domain) {
 
                 if (response && response.success) {
                     showPopupNotification(`✅ Time limit set: ${limitMinutes}m for ${domain}`, 'success', 2000);
-                    await loadRecentSites(); // Refresh the display
+                    await loadRecentSites();
                 } else {
                     showPopupNotification(`❌ Failed to set time limit for ${domain}`, 'error', 3000);
                 }
@@ -2534,7 +2318,7 @@ async function editTimeLimit(domain, currentLimit) {
 
                 if (response && response.success) {
                     showPopupNotification(`✅ Time limit updated: ${limitMinutes}m for ${domain}`, 'success', 2000);
-                    await loadRecentSites(); // Refresh the display
+                    await loadRecentSites();
                 } else {
                     showPopupNotification(`❌ Failed to update time limit for ${domain}`, 'error', 3000);
                 }
@@ -2548,15 +2332,12 @@ async function editTimeLimit(domain, currentLimit) {
     }
 }
 
-// Update time chart and session statistics
 async function updateTimeChart() {
     try {
         console.log('Updating time chart and session statistics...');
 
-        // Reload session statistics to get updated data
         await loadSessionStats();
 
-        // Update galaxy display with latest data
         updateGalaxy();
 
         console.log('Time chart updated successfully');
@@ -2565,16 +2346,13 @@ async function updateTimeChart() {
     }
 }
 
-// Start update intervals
 function startUpdateIntervals() {
-    // Update timer every second
     setInterval(() => {
         if (focusSessionData && focusSessionData.active) {
             updateFocusTimer();
         }
     }, 1000);
 
-    // Update current tab info every 2.5 seconds for live time updates
     setInterval(async () => {
         try {
             await loadCurrentTabInfo();
@@ -2583,7 +2361,6 @@ function startUpdateIntervals() {
         }
     }, 2500);
 
-    // Update recent sites list every 7 seconds for updated time values
     setInterval(async () => {
         try {
             await loadRecentSites();
@@ -2592,16 +2369,13 @@ function startUpdateIntervals() {
         }
     }, 7000);
 
-    // Update chart every 30 seconds
     setInterval(updateTimeChart, 30000);
 }
 
-// Open options page
 function openOptions() {
     chrome.runtime.openOptionsPage();
 }
 
-// Show help
 function showHelp() {
     alert('Grind Extension Dashboard Help:\n\n' +
         '• View your productivity score and time distribution\n' +
@@ -2612,7 +2386,6 @@ function showHelp() {
         '• Toggle theme with the moon/sun button');
 }
 
-// Listen for storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
     console.log('Storage changed:', namespace, changes);
 
@@ -2622,18 +2395,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
             applyTheme();
         }
 
-        // Apply text size changes
         if (changes.textSize) {
             applyTextSize(changes.textSize.newValue || 'medium');
         }
 
-        // Listen for blocked sites changes
         if (changes.blockedSites) {
             console.log('Blocked sites changed:', changes.blockedSites);
             loadBlockedSites();
         }
 
-        // Listen for blocking settings changes
         if (changes.blockingEnabled) {
             console.log('Blocking enabled changed:', changes.blockingEnabled);
             loadBlockedSites();
@@ -2652,18 +2422,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         if (changes.focusSession) {
             focusSessionData = changes.focusSession.newValue;
             if (focusSessionData && focusSessionData.active) {
-                // Session is active - start timer and update UI
                 updateFocusTimer();
                 if (startTimer) startTimer.disabled = true;
                 if (pauseTimer) pauseTimer.disabled = false;
                 if (timerMode) timerMode.textContent = 'FOCUS';
 
-                // Start timer interval if not already running
                 if (!focusTimerInterval) {
                     focusTimerInterval = setInterval(updateFocusTimer, 1000);
                 }
             } else if (focusSessionData && focusSessionData.pausedTime !== undefined) {
-                // Session is paused - update UI but don't start timer
                 if (startTimer) startTimer.disabled = false;
                 if (pauseTimer) {
                     pauseTimer.disabled = false;
@@ -2671,20 +2438,17 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
                 }
                 if (timerMode) timerMode.textContent = 'PAUSED';
 
-                // Clear timer interval
                 if (focusTimerInterval) {
                     clearInterval(focusTimerInterval);
                     focusTimerInterval = null;
                 }
 
-                // Update timer display with paused time
                 if (focusTimer && focusSessionData.pausedTime > 0) {
                     const minutes = Math.floor(focusSessionData.pausedTime / 60000);
                     const seconds = Math.floor((focusSessionData.pausedTime % 60000) / 1000);
                     focusTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                 }
             } else {
-                // Session is ended/reset - clear everything
                 if (startTimer) startTimer.disabled = false;
                 if (pauseTimer) {
                     pauseTimer.disabled = true;
@@ -2693,7 +2457,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
                 if (timerMode) timerMode.textContent = 'FOCUS';
                 if (focusTimer) focusTimer.textContent = '00:00';
 
-                // Clear timer interval
                 if (focusTimerInterval) {
                     clearInterval(focusTimerInterval);
                     focusTimerInterval = null;
@@ -2703,11 +2466,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
 });
 
-// Test function to verify basic functionality
 function testBasicFunctionality() {
     console.log('Testing basic functionality...');
 
-    // Test DOM elements
     console.log('DOM Elements:', {
         themeToggle: !!themeToggle,
         startTimer: !!startTimer,
@@ -2718,7 +2479,6 @@ function testBasicFunctionality() {
         helpBtn: !!helpBtn
     });
 
-    // Test if buttons are clickable
     if (themeToggle) {
         console.log('Theme toggle button found');
     }
@@ -2730,7 +2490,6 @@ function testBasicFunctionality() {
     console.log('Basic functionality test complete');
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         testBasicFunctionality();
